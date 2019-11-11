@@ -1,0 +1,32 @@
+input[type="text"] + div a{
+    display: block;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+    box-shadow: 1px 1px 1px 1px #919191;
+    text-decoration: none;
+    font-size: 12px;
+    height: 24px;
+    margin-top: -2px;
+}
+input[type="text"] + div a span{
+    height: 13px;
+    width: 12px;
+    border-radius: 3px;
+    position: absolute;
+    left: 5px;
+    top: 3px;
+}
+
+input[type="text"] + div a span + i {
+    font-size: 11px;
+    margin-left: 21px;
+    margin-right: 5px;
+    line-height: 23px;
+}
+input#jform_external_cache_directory , input#jform_gnzlib_path_modules {
+    width: calc(100% - 14px);
+}
+
+input#jform_gnzlib_path_file_corejs_min , input#jform_gnzlib_path_file_corejs {
+    width: calc(100% - 74px);
+}
