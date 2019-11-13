@@ -64,7 +64,7 @@ class PlgSystemPro_critical extends CMSPlugin
 		{
 			parent::__construct( $subject , $config );
 			$this->app = JFactory::getApplication();
-			
+
 		}
 		
 		/**

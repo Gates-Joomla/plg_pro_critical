@@ -68,7 +68,7 @@
 			}
 			$this->paramsComponent = ComponentHelper::getParams( 'com_pro_critical' );
 			$this->paramsComponent->set('plugin_param' , $this->params ) ;
-			
+			JLoader::register( 'Pro_criticalHelper', JPATH_ADMINISTRATOR . '/components/com_pro_critical/helpers/pro_critical.php' );
 			JLoader::registerNamespace('Plg\Pro_critical\Helpers\Assets',JPATH_PLUGINS.'/system/pro_critical/Helpers/Assets',$reset=false,$prepend=false,$type='psr4');
 			JLoader::registerNamespace( 'Com_pro_critical\Helpers' ,
 				JPATH_ADMINISTRATOR . '/components/com_pro_critical/com_pro_critical/helpers' ,
@@ -141,10 +141,18 @@
 //			$doc->addScriptOptions('csrf.token'  , JSession::getFormToken()  ) ;
 			
 			
+			# Только для FRONT
+			if( !$this->app->isClient( 'administrator' ) ){
+				# Получить Id компонента в справочнике компонентов com Pro Critical
+				$Component = \Plg\Pro_critical\Components\Component::instance();
+				$option_id = $Component->getOptionId();
+				$view_id = $Component->getViewId();
+			}
 			
 			
 			
-			# Только для администратора
+			
+			# Только для ADMIN
 			if( !$this->app->isClient( 'administrator' ) ) return ;
 			
 			
@@ -161,20 +169,22 @@
 		}
 		
 		/**
-		 *
+		 * Только для FrontEnd
 		 *
 		 * @throws Exception
 		 * @since version
 		 */
 		public function AfterRender(){
- 
+			
+		
+			
+			
+//			echo'<pre>';print_r($option_id  );echo'</pre>'.__FILE__.' '.__LINE__;
+//			die(__FILE__ .' '. __LINE__ );
 			
 			$HelpersCss = Helpers\Assets\Css::instance();
-			
 			# Найти и извлечь все ссылки на CSS файлы и теги стили
 			$HelpersCss->getFileList();
-			
-			
 			# Установить в HTML ссылки на Css файлы и стили
 			$HelpersCss->insertStylesIntoDocument();
 			
