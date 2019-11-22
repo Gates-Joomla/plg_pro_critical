@@ -71,6 +71,8 @@
 		 */
 		public function minify(){
 			
+			
+			
 			$form = $this->app->input->get('data' , false , 'RAW');
 			
 			if( !$form  )
@@ -297,6 +299,10 @@
 				{
 					// Code that may throw an Exception or Error.
 					$GNZ11_Js_css = new \GNZ11\Api\Optimize\Js_css();
+					
+					echo'<pre>';print_r( $GNZ11_Js_css );echo'</pre>'.__FILE__.' '.__LINE__;
+					die(__FILE__ .' '. __LINE__ );
+					
 					$data         = $GNZ11_Js_css->Minified( $url , $contents );
 				}
 				catch( Exception $e )

@@ -56,6 +56,7 @@
 			JLoader::register( 'Pro_criticalHelper' , JPATH_ADMINISTRATOR . '/components/com_pro_critical/helpers/pro_critical.php' );
 			JModelLegacy::addIncludePath( JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_' . self::$component . DS . 'models' , self::$prefix );
 			$this->Css_file_list = JModelLegacy::getInstance( 'Css_file_list' , self::$prefix );
+			$this->Css_style_list = JModelLegacy::getInstance( 'Css_style_list' , self::$prefix );
 			
 			# Установить поля в статистику
 			$this->statistics = [ 'New_fiels' => [] , 'Load_fiels' => [] , 'minifyCount' => 0 ];
@@ -99,6 +100,11 @@
 			$Css_file_list = $this->Css_file_list->getItems();
 			
 			
+			
+			
+			
+			
+			
 			$body = $this->app->getBody();
 			
 			# Найти все Style элементы в теле страницы
@@ -108,6 +114,7 @@
 			$Nodes = $xpath->query( '//link[@rel="stylesheet"]|//style' );
 			$link  = [];
 			$styleTag = [] ;
+			$hashArr = [] ;
 			foreach( $Nodes as $node )
 			{
 				switch( $node->tagName )
@@ -145,10 +152,12 @@
 						
 						break;
 					case 'style' :
-						$styleTag[] = [
+						$hash = md5( $node->nodeValue ) ;
+						$hashArr[] = $hash ;
+						$styleTag[$hash] = [
 							'load'=> 1 ,
 							'content'=>$node->nodeValue ,
-							'hash' => md5( $node->nodeValue ) ,
+							'hash' => $hash ,
 						] ;
 						break;
 				}#END SWICH
@@ -161,6 +170,8 @@
 				
 				
 			}#END FOREACH
+			
+			
 			
 			
 			
@@ -196,13 +207,36 @@
 			
 			# Добавить в справочник новые найденные файлы
 			$this->addNewLink( $link );
-
-			$this->addNewTagStyle($styleTag);
+			
+			
+			$Css_style_list = \Plg\Pro_critical\Helpers\Assets\Css\Style::getItemsByHash($hashArr);
+			$cssStyleMerge = array_merge($styleTag , $Css_style_list );
+			
+			
+			# Добавить в справочник новые найденные CSS стили
+			$this->addNewTagStyle( $cssStyleMerge , $Css_style_list );
 		}
 		
-		private function addNewTagStyle($styleTag){
+		/**
+		 * Добавить в справочник новые найденные CSS стили
+		 * @param $styleTag
+		 *
+		 * @return bool
+		 * @since 3.9
+		 */
+		private function addNewTagStyle($styleTag , $Css_style_list){
 			
-			$excludeFields=['err','protocol','absolute_path',  ];
+			
+			
+			
+			$excludeFields=[
+				'id',
+				'created',
+				'created_by',
+				'err',
+				'protocol',
+				'absolute_path',
+				];
 			
 			if( !count( $styleTag ) ) return true;
 			
@@ -215,6 +249,10 @@
 			$columns = [] ;
 			$firstElement = reset($styleTag );
 			
+			
+			
+			
+			# Создать Столбцы
 			foreach( $firstElement as $key => $itemFile )
 			{
 				if(  in_array( $key , $excludeFields ) ) {
@@ -223,27 +261,62 @@
 				$columns[]= $key ;
 			}#END FOREACH
 			
+			
+			
+			
+			
 			$realColumns = $columns ;
 			
 			$columns[] = 'created_by';
 			$columns[] = 'created';
 			
+			
+			
+			$i_count = null ;
 			foreach( $styleTag as  $itemFile )
 			{
+				if ( array_key_exists( $itemFile->hash, $Css_style_list)) {
+					continue ;
+				}#END IF
+				$i_count ++ ;
+				
+				
+				
 				$valuesArr =[] ;
 				foreach( $realColumns as $key   )
 				{
-					$item = $itemFile[$key] ;
+					switch ($key){
+						case 'published' : $item = 1 ;
+					
+						break ;
+						default : $item = $itemFile[$key] ;
+						
+					}
 					$valuesArr[] =  $db->quote( $item ) ;
 					
 				}#END FOREACH
+				
+				/*echo'<pre>';print_r( $valuesArr );echo'</pre>'.__FILE__.' '.__LINE__;
+				echo'<pre>';print_r( $realColumns );echo'</pre>'.__FILE__.' '.__LINE__;
+				die(__FILE__ .' '. __LINE__ );*/
+				
 				$valuesArr[] = $db->quote( $userId ) ;
 				$valuesArr[] = $db->quote( $now ) ;
 				$query->values( implode( "," , $valuesArr) );
 			}//foreach
 			
-			$query->insert( $db->quoteName( '#__pro_critical_css_style' ) )->columns( $db->quoteName( $columns ) );
+			if( !$i_count )
+			{
+				return true;
+			}#END IF
+			
+			$query->insert( $db->quoteName( '#__pro_critical_css_style' ) )
+				->columns( $db->quoteName( $columns ) );
 			$db->setQuery( $query );
+			
+//			echo 'Query Dump :'.__FILE__ .' Line:'.__LINE__  .$query->dump() ;
+//			die(__FILE__ .' '. __LINE__ );
+			
 			
 			try
 			{

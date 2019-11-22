@@ -3,15 +3,24 @@
 PlgProCritical.Options = Joomla.getOptions('PlgProCritical') ;
 
 PlgProCritical.Init = function(){
-    var viewArr = ['css_file'] ;
+    var viewArr = ['css_file', 'css_style'] ;
     var view = PlgProCritical.Options.view
 
     if ( viewArr.indexOf( view ) === -1 ) return ;
     var init =  PlgProCritical[view+'_Init'] ;
     init();
 };
+PlgProCritical.css_style_Init = function(){
+    var $ = jQuery ;
+    var $Input_s= $('[name*="[file]"],[name*="[minify_file]"],[name*="[override_file]"]');
+    var ppc = new PPC();
+    ppc.addBtnOpenFile( $Input_s );
+    ppc.initRadio_Files();
+};
 
 PlgProCritical.css_file_Init = function(){
+   console.trace()
+
     var $ = jQuery ;
     var $Input_s= $('[name*="[file]"],[name*="[minify_file]"],[name*="[override_file]"]');
     var ppc = new PPC();
@@ -58,6 +67,7 @@ var PPC = function(){
     };
 
     this.RadioEvtElement = [
+        'jform_minify1',
         'jform_minify',
         'jform_ver_type',
         'jform_file_debug',
@@ -72,8 +82,16 @@ var PPC = function(){
         $.each(this.RadioEvtElement , function (i,a) {
             var $el = $('#'+a+' input , select#'+a );
             $el.on('change',{elem:$el},$this[a]);
+            console.table(a)
         });
     };
+
+    this.jform_minify1 = function () {
+      alert('xcv')
+        return ;
+    };
+
+
     /**
      * Получить состояние радио кнопки
      * @param e - event
@@ -133,7 +151,7 @@ var PPC = function(){
             });
 
 
-
+        
     };
 
 
@@ -173,9 +191,9 @@ var PPC = function(){
         }
         ppc.saveForm()
     };
-
-
-
+    /**
+     * Сохранить форму
+     */
     this.saveForm = function () {
         var ppc = new PPC();
         var option  = $('form#adminForm').serialize();
@@ -269,11 +287,13 @@ var PPC = function(){
         };
         $.extend(objData, ppc.defAjaxParam);
 
+        console.log(objData) ;
 
         gnz11.getAjax().then(function (Ajax) {
 
             Ajax.Setting.Ajax.auto_render_message = true ;
             Ajax.Setting.Noty.timeout = 3000 ;
+
             Ajax.send(objData , 'admin_script').then(function (result) {
 
                 // Если задача сжимать и в ответе есть информация о файлах

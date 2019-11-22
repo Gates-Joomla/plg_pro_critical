@@ -200,7 +200,7 @@
 		public function onAjax(){
 			
 			# Проверить Token
-			if(!JSession::checkToken('get')) exit;
+			if(!JSession::checkToken('get')) exit('Err check Token');
 			
 			$dataModel = $this->app->input->get('model' , false , 'RAW' );
 			
