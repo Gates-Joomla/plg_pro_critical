@@ -31,6 +31,7 @@
 		public $statistics = [];
 		
 		public $BASE_LINK;
+		public $BASE_STYLE;
 		
 		
 		/**
@@ -129,7 +130,7 @@
 						
 						
 						# Разбор ссылки - поиск ошибок - исправление ссылки - определение локальная ссылка или нет
-						$log   = $Links_assets->linkAnalysis( $href  );
+						$log   = $Links_assets->linkAnalysis( $href );
 						$href = $log['file'];
 						$link[ $href ] = [] ;
 						$link[ $href ]['load'] = 1 ;
@@ -211,6 +212,8 @@
 			
 			$Css_style_list = \Plg\Pro_critical\Helpers\Assets\Css\Style::getItemsByHash($hashArr);
 			$cssStyleMerge = array_merge($styleTag , $Css_style_list );
+			$this->BASE_STYLE = $cssStyleMerge ;
+			
 			
 			
 			# Добавить в справочник новые найденные CSS стили
@@ -224,85 +227,68 @@
 		 * @return bool
 		 * @since 3.9
 		 */
-		private function addNewTagStyle($styleTag , $Css_style_list){
-			
-			
-			
-			
-			$excludeFields=[
-				'id',
-				'created',
-				'created_by',
-				'err',
-				'protocol',
-				'absolute_path',
-				];
+		private function addNewTagStyle($styleTag , $Css_style_list)
+		{
+			$excludeFields = [ 'id' , 'created' , 'created_by' , 'err' , 'protocol' , 'absolute_path' , ];
 			
 			if( !count( $styleTag ) ) return true;
 			
-			$db = JFactory::getDbo();
-			$query   = $db->getQuery( true );
-			$jdata   = new JDate();
-			$now     = $jdata->toSql();
-			$userId  = JFactory::getUser()->id;
+			$db     = JFactory::getDbo();
+			$query  = $db->getQuery( true );
+			$jdata  = new JDate();
+			$now    = $jdata->toSql();
+			$userId = JFactory::getUser()->id;
 			
-			$columns = [] ;
-			$firstElement = reset($styleTag );
-			
-			
+			$columns      = [];
+			$firstElement = reset( $styleTag );
 			
 			
 			# Создать Столбцы
 			foreach( $firstElement as $key => $itemFile )
 			{
-				if(  in_array( $key , $excludeFields ) ) {
-					continue ;
+				if( in_array( $key , $excludeFields ) )
+				{
+					continue;
 				}#END IF
-				$columns[]= $key ;
+				$columns[] = $key;
 			}#END FOREACH
 			
-			
-			
-			
-			
-			$realColumns = $columns ;
+			$realColumns = $columns;
 			
 			$columns[] = 'created_by';
 			$columns[] = 'created';
 			
-			
-			
-			$i_count = null ;
-			foreach( $styleTag as  $itemFile )
+			$i_count = null;
+			foreach( $styleTag as $itemFile )
 			{
-				if ( array_key_exists( $itemFile->hash, $Css_style_list)) {
-					continue ;
-				}#END IF
-				$i_count ++ ;
-				
-				
-				
-				$valuesArr =[] ;
-				foreach( $realColumns as $key   )
+				if( array_key_exists( $itemFile->hash , $Css_style_list ) )
 				{
-					switch ($key){
-						case 'published' : $item = 1 ;
-					
-						break ;
-						default : $item = $itemFile[$key] ;
+					continue;
+				}#END IF
+				$i_count++;
+				
+				
+				$valuesArr = [];
+				foreach( $realColumns as $key )
+				{
+					switch( $key )
+					{
+						case 'published' :
+							$item = 1;
+							
+							break;
+						default :
+							$item = $itemFile[ $key ];
 						
 					}
-					$valuesArr[] =  $db->quote( $item ) ;
+					$valuesArr[] = $db->quote( $item );
 					
 				}#END FOREACH
 				
-				/*echo'<pre>';print_r( $valuesArr );echo'</pre>'.__FILE__.' '.__LINE__;
-				echo'<pre>';print_r( $realColumns );echo'</pre>'.__FILE__.' '.__LINE__;
-				die(__FILE__ .' '. __LINE__ );*/
 				
-				$valuesArr[] = $db->quote( $userId ) ;
-				$valuesArr[] = $db->quote( $now ) ;
-				$query->values( implode( "," , $valuesArr) );
+				$valuesArr[] = $db->quote( $userId );
+				$valuesArr[] = $db->quote( $now );
+				$query->values( implode( "," , $valuesArr ) );
 			}//foreach
 			
 			if( !$i_count )
@@ -310,13 +296,8 @@
 				return true;
 			}#END IF
 			
-			$query->insert( $db->quoteName( '#__pro_critical_css_style' ) )
-				->columns( $db->quoteName( $columns ) );
+			$query->insert( $db->quoteName( '#__pro_critical_css_style' ) )->columns( $db->quoteName( $columns ) );
 			$db->setQuery( $query );
-			
-//			echo 'Query Dump :'.__FILE__ .' Line:'.__LINE__  .$query->dump() ;
-//			die(__FILE__ .' '. __LINE__ );
-			
 			
 			try
 			{
@@ -327,23 +308,27 @@
 			{
 				// Executed only in PHP 5, will not be reached in PHP 7
 				echo 'Выброшено исключение: ' , $e->getMessage() , "\n";
-				echo'<pre>';print_r(  $e );echo'</pre>'.__FILE__.' '.__LINE__;
-				die(__FILE__ .' '. __LINE__ );
+				echo '<pre>';
+				print_r( $e );
+				echo '</pre>' . __FILE__ . ' ' . __LINE__;
+				die( __FILE__ . ' ' . __LINE__ );
 			}
 			catch( Throwable $e )
 			{
 				// Executed only in PHP 7, will not match in PHP 5
 				echo 'Выброшено исключение: ' , $e->getMessage() , "\n";
-				echo '<pre>'; print_r( $e ); echo '</pre>' . __FILE__ . ' ' . __LINE__;
+				echo '<pre>';
+				print_r( $e );
+				echo '</pre>' . __FILE__ . ' ' . __LINE__;
 				die( __FILE__ . ' ' . __LINE__ );
 			}
 			
 			return true;
 			
-		/*	echo'<pre>';print_r( $query->dump() );echo'</pre>'.__FILE__.' '.__LINE__;
-			echo'<pre>';print_r( $realColumns );echo'</pre>'.__FILE__.' '.__LINE__;
-			echo'<pre>';print_r( $styleTag );echo'</pre>'.__FILE__.' '.__LINE__;
-			die(__FILE__ .' '. __LINE__ );*/
+			/*	echo'<pre>';print_r( $query->dump() );echo'</pre>'.__FILE__.' '.__LINE__;
+				echo'<pre>';print_r( $realColumns );echo'</pre>'.__FILE__.' '.__LINE__;
+				echo'<pre>';print_r( $styleTag );echo'</pre>'.__FILE__.' '.__LINE__;
+				die(__FILE__ .' '. __LINE__ );*/
 		}
 		
 		
@@ -362,6 +347,8 @@
 			
 			# массив для HTML элементов
 			$tagsArr = [] ;
+			
+			
 			foreach( $this->BASE_LINK as $url => $Link )
 			{
 				if( isset($Link->load)  &&  !$Link->load  ) continue ; #END IF
@@ -378,15 +365,30 @@
 				
 				# установить ссылку вниз Tag Head
 				$dom::writeBottomHeadTag('link' , null , $LinkData );
+			}#END FOREACH
+			
+			$Css_styleData = null ;
+			foreach( $this->BASE_STYLE as $item )
+			{
+				if( isset($Link->load)  &&  !$Link->load  ) continue ; #END IF
+				# Пропустить если отложенная загрузка
+				if ( isset($Link->delayed_loading)  && $Link->delayed_loading) continue ; #END IF
 				
-//				echo'<pre>';print_r( $LinkData );echo'</pre>'.__FILE__.' '.__LINE__;
+				# Подготовить стиле к загрузи - определить параметры стилей
+				$Css_styleData .= \Plg\Pro_critical\Helpers\Assets\Css\Style::prepareStyleData( $item );
+				
+				
+				
+//				echo'<pre>';print_r( $Css_styleData );echo'</pre>'.__FILE__.' '.__LINE__;
 //				die(__FILE__ .' '. __LINE__ );
 				
-			
-				
-				
-				
 			}#END FOREACH
+			
+			# установить ссылку вниз Tag Head
+			$dom::writeBottomHeadTag('style' , $Css_styleData , [] );
+			
+			
+			
 //			die(__FILE__ .' '. __LINE__ );
 		}
 		

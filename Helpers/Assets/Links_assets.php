@@ -76,6 +76,7 @@
 		public function prepareLinkData ( $Link ){
 			
 			$Link->href = $Link->file   ;
+			
 			# Переопределение
 			if ( isset( $Link->override ) && !empty( $Link->override_file ) && $Link->override   )
 				$Link->href = $Link->override_file ; #END IF

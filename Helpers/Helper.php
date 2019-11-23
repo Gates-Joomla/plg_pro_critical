@@ -176,17 +176,13 @@
 		 */
 		public function AfterRender(){
 			
-		
-			
-			
-//			echo'<pre>';print_r($option_id  );echo'</pre>'.__FILE__.' '.__LINE__;
-//			die(__FILE__ .' '. __LINE__ );
-			
 			$HelpersCss = Helpers\Assets\Css::instance();
 			# Найти и извлечь все ссылки на CSS файлы и теги стили
 			$HelpersCss->getFileList();
 			# Установить в HTML ссылки на Css файлы и стили
 			$HelpersCss->insertStylesIntoDocument();
+			
+			
 			
 			
 			

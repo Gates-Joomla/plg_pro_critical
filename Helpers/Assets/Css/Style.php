@@ -3,6 +3,14 @@
 	
 	class Style
 	{
+		
+		public static function prepareStyleData($Style){
+			
+			
+			return $Style->content_min ;
+		}
+		
+		
 		/**
 		 * Получить из справочника css_style по hash
 		 * @param $HashArr

@@ -287,7 +287,7 @@ var PPC = function(){
         };
         $.extend(objData, ppc.defAjaxParam);
 
-        console.log(objData) ;
+
 
         gnz11.getAjax().then(function (Ajax) {
 
@@ -297,14 +297,28 @@ var PPC = function(){
             Ajax.send(objData , 'admin_script').then(function (result) {
 
                 // Если задача сжимать и в ответе есть информация о файлах
-                if (objData.task === 'minify' && typeof result.data.files !== 'undefined' ){
-                    if ( typeof result.data.files.minify_file === 'undefined'){
-                        Ajax.renderNoty('Путь к сжатому файлу === undefined'  , 'error');
-                        return ;
+                if (objData.task === 'minify' ){
+                    if ( typeof result.data.files !== 'undefined' ){
+                        if ( typeof result.data.files.minify_file === 'undefined'){
+                            Ajax.renderNoty('Путь к сжатому файлу === undefined'  , 'error');
+                            return ;
+                        }
+                        $(data.min).val(result.data.files.minify_file);
+                        ppc.addBtnOpenFile( $(data.min) )
                     }
-                    $(data.min).val(result.data.files.minify_file);
-                    ppc.addBtnOpenFile( $(data.min) )
+                    if ( typeof result.data.content !== 'undefined' ){
+                        $('#jform_content_min').val(result.data.content) ;
+
+
+                        console.log(result.data.content) ;
+                        console.log(objData.task) ;
+                    }
+
                 }
+
+
+
+
             });
         },function (err) {
             console.error(err)

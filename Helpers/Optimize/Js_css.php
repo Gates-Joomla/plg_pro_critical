@@ -69,91 +69,158 @@
 		 * @throws Throwable
 		 * @since version
 		 */
-		public function minify(){
+		public function minify()
+		{
+			
+			$form = $this->app->input->get( 'data' , false , 'RAW' );
 			
 			
 			
-			$form = $this->app->input->get('data' , false , 'RAW');
-			
-			if( !$form  )
+			if( !$form )
 			{
-				$arr = $this->app->input->get('data' , [] , 'ARRAY');
-				echo'<pre>';print_r( $arr );echo'</pre>'.__FILE__.' '.__LINE__;
-				die(__FILE__ .' '. __LINE__ );
+				$arr = $this->app->input->get( 'data' , [] , 'ARRAY' );
+				echo '<pre>';
+				print_r( $arr );
+				echo '</pre>' . __FILE__ . ' ' . __LINE__;
+				die( __FILE__ . ' ' . __LINE__ );
 			}#END IF
-			parse_str( $form, $output );
+			parse_str( $form , $output );
+			
+			
+			
 			
 			# Если передается не форма а строка с ссылкой на файл
-			if( !isset($output['jform']) )
+			if( !isset( $output[ 'jform' ] ) )
 			{
-				$file = $form ;
-				$Ext = JFile::getExt( $form );
-				if ($Ext == 'css'){
-					$urlApi =  self::$cssUrl ;
-				}else if($Ext == 'js'){
-					$urlApi = self::$javascriptUrl ;
-				}else{
-					$mes = 'Не удалось определить тип обрабатываемых данных.' ;
+				
+				
+				$file = $form;
+				$Ext  = JFile::getExt( $form );
+				
+				
+				
+				if( $Ext == 'css' )
+				{
+					$urlApi = self::$cssUrl;
+				}
+				else if( $Ext == 'js' )
+				{
+					$urlApi = self::$javascriptUrl;
+				}
+				else
+				{
+					$mes = 'Не удалось определить тип обрабатываемых данных.';
 					throw new Exception( $mes , 500 );
 				}#END IF
 				
 				#Подготовить имена файлов и отправить на сжатие.
-				$data = $this->getDataProcess( $file , $urlApi   );
+				$data = $this->getDataProcess( $file , $urlApi );
 				
 				$mes = 'Сжатие файла выполнено!';
-				$this->app->enqueueMessage( $mes  );
+				$this->app->enqueueMessage( $mes );
 				
 				return $data;
 				
 			}#END IF
 			
-			$model =  ( explode('.' , $output['task'] ) )[0] ;
-			$jform = $output['jform'] ;
+			$model = ( explode( '.' , $output[ 'task' ] ) )[ 0 ];
 			
+			
+			
+			
+			
+			
+			$jform = $output[ 'jform' ];
 			
 			
 			if( $model == 'css_file' || $model == 'js_file' )
 			{
-				$file = $jform['file'] ;
-				if( $jform['override'] && !empty( $jform['override_file'] ))
+				$file = $jform[ 'file' ];
+				if( $jform[ 'override' ] && !empty( $jform[ 'override_file' ] ) )
 				{
-					$file = $jform['override_file'] ;
+					$file = $jform[ 'override_file' ];
 				}#END IF
+				$Model = JModelLegacy::getInstance( $model , self::$prefix );
 				
-				
+			}#END IF
+			
+			if( $model == 'css_style' )
+			{
 				$Model = JModelLegacy::getInstance( $model , self::$prefix );
 			}#END IF
 			
-			$urlApi = false ;
-			switch($model){
+			
+			
+			
+			$urlApi = false;
+			switch( $model )
+			{
+				case 'css_style':
 				case 'css_file':
-					$urlApi =  self::$cssUrl ;
+					$urlApi = self::$cssUrl;
 					
-					break ;
+					break;
 				case 'js_file':
-					$urlApi = self::$javascriptUrl ;
+					$urlApi = self::$javascriptUrl;
 					
-					break ;
+					break;
 				default :
-					$mes = 'Не удалось определить тип обрабатываемых данных.' ;
+					$mes = 'Не удалось определить тип обрабатываемых данных.';
 					throw new Exception( $mes , 500 );
 			}
 			
+			if( $model == 'css_style' )
+			{
+				$GNZ11_Js_css = new \GNZ11\Api\Optimize\Js_css();
+				$data         = $GNZ11_Js_css->Minified( $urlApi , $jform['content'] );
+				
+				$jform['content_min'] = $data['content'] ;
+				
+				
+				if( !$Model->save( $jform ) )
+				{
+					$mes = 'Сохранение параметров не удалось!';
+					$this->app->enqueueMessage( $mes , 'warning' );
+					
+					return $data;
+				}#END IF
+				
+				$mes = 'Параметры сохранены!';
+				$this->app->enqueueMessage( $mes );
+				
+				$mes = 'Css стиль создан!' . '<br>';
+				$mes .= 'Размер не сжатого: ' . $data[ 'sizes' ][ 'in' ] . ' кБ.<br>';
+				$mes .= 'Размер сжатого: ' . $data[ 'sizes' ][ 'out' ] . ' кБ.<br>';
+				$mes .= 'Процент сжатия: ' . $data[ 'sizes' ][ 'zip_percent' ] . '%';
+				$this->app->enqueueMessage( $mes );
+				
+				return $data;
+				
+				echo'<pre>';print_r( $jform['content_min']  );echo'</pre>'.__FILE__.' '.__LINE__;
+				echo'<pre>';print_r( $data  );echo'</pre>'.__FILE__.' '.__LINE__;
+				echo'<pre>';print_r( $model == 'css_style' );echo'</pre>'.__FILE__.' '.__LINE__;
+				die(__FILE__ .' '. __LINE__ );
+			}#END IF
+			
+			
+			
 			
 			#Подготовить имена файлов и отправить на сжатие.
-			$data = $this->getDataProcess( $file , $urlApi   );
+			$data = $this->getDataProcess( $file , $urlApi );
 			
 			
-			$jform['minify_file'] = $this->newFile ;
-			if( !$Model->save($jform) )
+			$jform[ 'minify_file' ] = $this->newFile;
+			if( !$Model->save( $jform ) )
 			{
 				$mes = 'Сохранение параметров не удалось!';
 				$this->app->enqueueMessage( $mes , 'warning' );
+				
 				return $data;
 			}#END IF
 			
 			$mes = 'Параметры сохранены!';
-			$this->app->enqueueMessage( $mes  );
+			$this->app->enqueueMessage( $mes );
+			
 			return $data;
 			#TODO Создать обработчик ошибок !!!
 			
@@ -171,6 +238,7 @@
 			# Только для администратора
 			if( !$this->app->isClient( 'administrator' ) ) return null ;
 			
+			
 			$form = $this->app->input->get('data' , false , 'RAW');
 			
 			parse_str( $form, $output );
@@ -178,34 +246,63 @@
 			$model =  ( explode('.' , $output['task'] ) )[0] ;
 			$jform = $output['jform'] ;
 			
-			if( $model == 'css_file' )
-			{
-				$path = $jform['minify_file'];
-				$jform['minify_file'] = false ;
 			
-				$Css_fileModel = JModelLegacy::getInstance( $model , self::$prefix );
+			$Model = JModelLegacy::getInstance( $model , self::$prefix );
+			
+			
+			
+			switch($model){
+				case 'css_file':
+					$path                   = $jform[ 'minify_file' ];
+					$jform[ 'minify_file' ] = false;
+					
+					if( !$Model->save( $jform ) )
+					{
+						$this->app->enqueueMessage( 'Не удалось обновать параметры этих данных' , 'warning' );
+					}
+					else
+					{
+						$this->app->enqueueMessage( 'Параметры сохранены!' );
+					}#END IF
+					if( empty( $path ) )
+					{
+						$mes = 'ERROR : Имя файла не передано!';
+						$this->app->enqueueMessage( $mes , 'warning' );
+						
+						return true;
+					}#END IF
+					
+					if( $this->removeMinFile( $path ) )
+					{
+						return true;
+					}#END IF
+					
+					break;
+					
+				case 'css_style':
+					
+					$jform['content_min'] = false ;
+					if( !$Model->save( $jform ) )
+					{
+						$this->app->enqueueMessage('Не удалось обновать параметры этих данных' , 'warning');
+					}else{
+						$this->app->enqueueMessage('Параметры сохранены!' );
+					}#END IF
+					
+					
+					
+					
+					return true;
+					break ;
+					
+				default :
 				
-				if( !$Css_fileModel->save( $jform ) )
-				{
-					$this->app->enqueueMessage('Не удалось обновать параметры этих данных' , 'warning');
-				}else{
-					$this->app->enqueueMessage('Параметры сохранены!' );
-				}#END IF
-			}#END IF
+			}
 			
 			
-			if( empty($path) )
-			{
-				$mes = 'ERROR : Имя файла не передано!';
-				$this->app->enqueueMessage( $mes , 'warning' );
-
-				return true ;
-			}#END IF
 			
-			if( $this->removeMinFile($path) )
-			{
-				return true ;
-			}#END IF
+			
+			
 			
 			return false ;
 			
@@ -273,8 +370,6 @@
 			
 			foreach( $arr as $originalFilePath => $minFilePath )
 			{
-				
-				
 				$handler = @fopen( $minFilePath , 'w' );
 				if( !$handler )
 				{
@@ -300,8 +395,8 @@
 					// Code that may throw an Exception or Error.
 					$GNZ11_Js_css = new \GNZ11\Api\Optimize\Js_css();
 					
-					echo'<pre>';print_r( $GNZ11_Js_css );echo'</pre>'.__FILE__.' '.__LINE__;
-					die(__FILE__ .' '. __LINE__ );
+//					echo'<pre>';print_r( $GNZ11_Js_css );echo'</pre>'.__FILE__.' '.__LINE__;
+//					die(__FILE__ .' '. __LINE__ );
 					
 					$data         = $GNZ11_Js_css->Minified( $url , $contents );
 				}
@@ -353,9 +448,9 @@
 			$this->newFile = str_replace( JURI::root() , '/' , $newfile );
 			
 			$newArr[ JPATH_ROOT . $this->file ] = JPATH_ROOT . $this->newFile;
-			return$this->Procrss_minify( $newArr , $urlApi );
+			return $this->Procrss_minify( $newArr , $urlApi );
 			
-		}
+		}#END FN
 		
 		
 	}
