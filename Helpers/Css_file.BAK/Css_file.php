@@ -37,6 +37,7 @@
 		 */
 		private function __construct ( $options = [] )
 		{
+			die(__FILE__ .' '. __LINE__ );
 			$this->app = JFactory::getApplication();
 			JLoader::register( 'Pro_criticalHelper', JPATH_ADMINISTRATOR . '/components/com_pro_critical/helpers/pro_critical.php' );
 			JModelLegacy::addIncludePath( JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_' . self::$component . DS . 'models', self::$prefix );
@@ -63,8 +64,8 @@
 		}#END FN
 		
 		
-		public function getFileList(){
-			
+		/*public function getFileList(){
+			die(__FILE__ .' '. __LINE__ );
 			
 			$app = JFactory::getApplication() ; 
 			
@@ -146,9 +147,9 @@
 //			echo'<pre>';print_r( $Css_file_list );echo'</pre>'.__FILE__.' '.__LINE__;
 //			echo'<pre>';print_r( $doc->_scripts );echo'</pre>'.__FILE__.' '.__LINE__;
 //			die(__FILE__ .' Lines '. __LINE__ );
-		}
+		}*/
 		
-		private function addNewLink($link){
+		/*private function addNewLink($link){
 			if( !count($link) )
 			{
 				return true ;
@@ -205,7 +206,7 @@
 							}
 			
 			return true ;
-		}
+		}*/
 		
 		
 		

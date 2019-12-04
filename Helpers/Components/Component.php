@@ -119,6 +119,7 @@
 			$comparams = \JComponentHelper::getParams( 'com_pro_critical');
 			$paramsComponent = $comparams->toArray();
 			
+			
 			# Из глобальных насторек
 			# параметры запросов которые игнорировать
 			$excluded_request_global = $paramsComponent['excluded_request_global'] ;

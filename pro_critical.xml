@@ -1,22 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <extension type="plugin" version="3.8" group="system" method="upgrade">
 	<name>PLG_SYSTEM_PRO_CRITICAL</name>
-	<creationDate>11th ноября, 2019</creationDate>
+	<creationDate>5th ноября, 2019</creationDate>
 	<author>Nikolaychuk Oleg</author>
 	<authorEmail>sad.net79@gmail.com</authorEmail>
-	<authorUrl>http://nobd.ml</authorUrl>
-	<copyright>Copyright (C) 2015. All Rights Reserved</copyright>
+	<authorUrl>https://nobd.ml</authorUrl>
+	<copyright>Copyright (C) 2019. All Rights Reserved</copyright>
 	<license>GNU/GPL Version 2 or later - http://www.gnu.org/licenses/gpl-2.0.html</license>
 	<version>1.0.4</version>
 	<description>PLG_SYSTEM_PRO_CRITICAL_XML_DESCRIPTION</description>
 
-	<!-- Language files -->
+	<!-- [Interpretation 16432] Language files -->
 	<languages folder="language">
 		<language tag="en-GB">en-GB/en-GB.plg_system_pro_critical.ini</language>
 		<language tag="en-GB">en-GB/en-GB.plg_system_pro_critical.sys.ini</language>
 	</languages>
 
-	<!-- Plugin files -->
+	<!-- [Interpretation 16439] Plugin files -->
 	<files>
 		<filename plugin="pro_critical">pro_critical.php</filename>
 		<filename>index.html</filename>
@@ -24,4 +24,9 @@
 		<folder>Helpers</folder>
 		<folder>assets</folder>
 	</files>
+
+	<!-- [Interpretation 16526] Update servers -->
+	<updateservers>
+		<server type="extension" priority="1" name="System - Pro_critical">https://joomla-upd.ga/plg_system_pro_critical.xml</server>
+	</updateservers>
 </extension>

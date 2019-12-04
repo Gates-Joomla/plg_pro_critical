@@ -296,6 +296,11 @@ var PPC = function(){
 
             Ajax.send(objData , 'admin_script').then(function (result) {
 
+                // очистить поле minify Textera
+                if (objData.task === 'remove_minify' ){
+                    $('#jform_content_min').empty();
+                }
+
                 // Если задача сжимать и в ответе есть информация о файлах
                 if (objData.task === 'minify' ){
                     if ( typeof result.data.files !== 'undefined' ){
@@ -313,6 +318,8 @@ var PPC = function(){
                         console.log(result.data.content) ;
                         console.log(objData.task) ;
                     }
+
+
 
                 }
 

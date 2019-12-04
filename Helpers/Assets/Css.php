@@ -23,15 +23,17 @@
 	 * @package     Plg\Pro_critical\HelpersCss
 	 *
 	 */
-	class Css
+	class Css extends Links
 	{
 		private $app;
 		public static $instance;
 		
 		public $statistics = [];
 		
-		public $BASE_LINK;
-		public $BASE_STYLE;
+		public $cssFileData;
+		public $cssStyleData;
+		
+		
 		
 		
 		/**
@@ -43,7 +45,7 @@
 		private static $prefix = 'pro_critical' . 'Model';
 		
 		
-		private $Css_file_list;
+//		private $Css_file_list;
 		
 		
 		/**
@@ -54,10 +56,10 @@
 		private function __construct ( $options = [] )
 		{
 			$this->app = JFactory::getApplication();
-			JLoader::register( 'Pro_criticalHelper' , JPATH_ADMINISTRATOR . '/components/com_pro_critical/helpers/pro_critical.php' );
-			JModelLegacy::addIncludePath( JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_' . self::$component . DS . 'models' , self::$prefix );
-			$this->Css_file_list = JModelLegacy::getInstance( 'Css_file_list' , self::$prefix );
-			$this->Css_style_list = JModelLegacy::getInstance( 'Css_style_list' , self::$prefix );
+//			JLoader::register( 'Pro_criticalHelper' , JPATH_ADMINISTRATOR . '/components/com_pro_critical/helpers/pro_critical.php' );
+//			JModelLegacy::addIncludePath( JPATH_ADMINISTRATOR . DS . 'components' . DS . 'com_' . self::$component . DS . 'models' , self::$prefix );
+//			$this->Css_file_list = JModelLegacy::getInstance( 'Css_file_list' , self::$prefix );
+//			$this->Css_style_list = JModelLegacy::getInstance( 'Css_style_list' , self::$prefix );
 			
 			# Установить поля в статистику
 			$this->statistics = [ 'New_fiels' => [] , 'Load_fiels' => [] , 'minifyCount' => 0 ];
@@ -95,15 +97,9 @@
 			$app = JFactory::getApplication();
 			$Links_assets = \Plg\Pro_critical\Helpers\Assets\Links_assets ::instance() ;
 			
-			
 			# Загрузить все данные из справочника CSS FILE
-			$app->input->set( 'limit' , 0 ); // Снять лимит на количество записей DEF - 20
-			$Css_file_list = $this->Css_file_list->getItems();
-			
-			
-			
-			
-			
+//			$app->input->set( 'limit' , 0 ); // Снять лимит на количество записей DEF - 20
+//			$Css_file_list = $this->Css_file_list->getItems();
 			
 			
 			$body = $this->app->getBody();
@@ -115,13 +111,18 @@
 			$Nodes = $xpath->query( '//link[@rel="stylesheet"]|//style' );
 			$link  = [];
 			$styleTag = [] ;
+			$hashArrLink = [] ;
 			$hashArr = [] ;
 			foreach( $Nodes as $node )
 			{
 				switch( $node->tagName )
 				{
 					case 'link':
+						
 						$attr    = $dom::getAttrElement( $node , [ 'rel' ] );
+						$hash = md5( $attr[ 'href' ] ) ;
+						$hashArrLink[] = $hash ;
+						
 						$hrefArr = explode( '?' , $attr[ 'href' ] );
 						
 						unset( $attr[ 'href' ] );
@@ -130,206 +131,58 @@
 						
 						
 						# Разбор ссылки - поиск ошибок - исправление ссылки - определение локальная ссылка или нет
-						$log   = $Links_assets->linkAnalysis( $href );
+						$log   = $this->linkAnalysis( $href );
 						$href = $log['file'];
-						$link[ $href ] = [] ;
-						$link[ $href ]['load'] = 1 ;
 						
-						$link[ $href ] = array_merge( $link[ $href ] , $log  ) ;
+						$Registry = new \Joomla\Registry\Registry;
+						$Registry->set('load' , 1 );
+						$Registry->set('hash' , $hash );
 						
-						$link[ $href ]           = array_merge( $link[ $href ] , $attr );
+						$data = array_merge( $log , $attr );
 						
-						# Если есть параметры в ссылке
-						if( isset( $hrefArr[ 1 ] ) )
-						{
-							# Разобрать параметры ссылки
-							$link[ $href ][ 'params_query' ] = $this->parseRequestParameters( $hrefArr , $link , $href );
-						}#END IF
+						# Разобрать параметры ссылки
+						$data['params_query'] = $this->parseRequestParameters( $hrefArr  );
 						
+						$Registry->loadArray($data);
+						$link[$hash] = $Registry->toObject();
 						$this->statistics['errors'] += ( count( $log['err'] )) ;
-						
-						// $link[ $href ]['errors'] = $log['err'];
-						
 						
 						break;
 					case 'style' :
 						$hash = md5( $node->nodeValue ) ;
 						$hashArr[] = $hash ;
-						$styleTag[$hash] = [
-							'load'=> 1 ,
-							'content'=>$node->nodeValue ,
-							'hash' => $hash ,
-						] ;
+						
+						$Registry = new \Joomla\Registry\Registry;
+						$Registry->set( 'load' , 1 );
+						$Registry->set( 'hash' , $hash );
+						$Registry->set( 'content' , $node->nodeValue );
+						
+						$styleTag[ $hash ] = $Registry->toObject();
 						break;
 				}#END SWICH
-				
 				
 				# Удалить найденый узел
 				$node->parentNode->removeChild( $node );
 				
-				
-				
-				
 			}#END FOREACH
-			
-			
-			
-			
-			
 			
 			$body = $dom->saveHTML();
 			$this->app->setBody( $body );
 			
-			$UbdateCssFile = [];
-			
-			# Скопировать набор найденых файлов
-			$this->BASE_LINK = $link;
-			
-			# Совмещение извлеченных данны с настройкам загрузок
-			foreach( $Css_file_list as $item )
-			{
-				# Если найденный файл есть в справочнике
-				if( isset( $link[ $item->file ] ) )
-				{
-					# Дополняем ссылку данными со справочника
-					$this->BASE_LINK[ $item->file ] = $item;
-					# Исключаем ссылку из добавления в справочник
-					unset( $link[ $item->file ] );
-					
-					$this->statistics[ 'Load_fiels' ][] = $item->file;
-					if( $item->minify ) $this->statistics[ 'minifyCount' ]++;
-				}
-			}#END FOREACH
-			
-			# STAT - новые найденые файлы 
-			$this->statistics[ 'New_fiels' ] = array_keys( $link );
-			# STAT - файлы которые будут загружены
-			$this->statistics[ 'Load_fiels' ] = array_keys( $this->BASE_LINK );
-			
+			# Объеденить с данными из базы модели
+			$this->cssFileData = self::getItemsByHash( $hashArrLink , 'css_file' , $link ) ;
 			# Добавить в справочник новые найденные файлы
-			$this->addNewLink( $link );
+			self::addNewLink( $this->cssFileData , 'css_file' );
 			
-			
-			$Css_style_list = \Plg\Pro_critical\Helpers\Assets\Css\Style::getItemsByHash($hashArr);
-			$cssStyleMerge = array_merge($styleTag , $Css_style_list );
-			$this->BASE_STYLE = $cssStyleMerge ;
-			
-			
-			
-			# Добавить в справочник новые найденные CSS стили
-			$this->addNewTagStyle( $cssStyleMerge , $Css_style_list );
+			# Объеденить с данными из базы модели css_style
+			$this->cssStyleData = self::getItemsByHash( $hashArr , 'css_style' , $styleTag ) ;
+			# Добавить в справочник новые найденные css_style
+			self::addNewLink( $this->cssStyleData , 'css_style' );
+		
 		}
 		
-		/**
-		 * Добавить в справочник новые найденные CSS стили
-		 * @param $styleTag
-		 *
-		 * @return bool
-		 * @since 3.9
-		 */
-		private function addNewTagStyle($styleTag , $Css_style_list)
-		{
-			$excludeFields = [ 'id' , 'created' , 'created_by' , 'err' , 'protocol' , 'absolute_path' , ];
-			
-			if( !count( $styleTag ) ) return true;
-			
-			$db     = JFactory::getDbo();
-			$query  = $db->getQuery( true );
-			$jdata  = new JDate();
-			$now    = $jdata->toSql();
-			$userId = JFactory::getUser()->id;
-			
-			$columns      = [];
-			$firstElement = reset( $styleTag );
-			
-			
-			# Создать Столбцы
-			foreach( $firstElement as $key => $itemFile )
-			{
-				if( in_array( $key , $excludeFields ) )
-				{
-					continue;
-				}#END IF
-				$columns[] = $key;
-			}#END FOREACH
-			
-			$realColumns = $columns;
-			
-			$columns[] = 'created_by';
-			$columns[] = 'created';
-			
-			$i_count = null;
-			foreach( $styleTag as $itemFile )
-			{
-				if( array_key_exists( $itemFile->hash , $Css_style_list ) )
-				{
-					continue;
-				}#END IF
-				$i_count++;
-				
-				
-				$valuesArr = [];
-				foreach( $realColumns as $key )
-				{
-					switch( $key )
-					{
-						case 'published' :
-							$item = 1;
-							
-							break;
-						default :
-							$item = $itemFile[ $key ];
-						
-					}
-					$valuesArr[] = $db->quote( $item );
-					
-				}#END FOREACH
-				
-				
-				$valuesArr[] = $db->quote( $userId );
-				$valuesArr[] = $db->quote( $now );
-				$query->values( implode( "," , $valuesArr ) );
-			}//foreach
-			
-			if( !$i_count )
-			{
-				return true;
-			}#END IF
-			
-			$query->insert( $db->quoteName( '#__pro_critical_css_style' ) )->columns( $db->quoteName( $columns ) );
-			$db->setQuery( $query );
-			
-			try
-			{
-				// Code that may throw an Exception or Error.
-				$db->execute();
-			}
-			catch( Exception $e )
-			{
-				// Executed only in PHP 5, will not be reached in PHP 7
-				echo 'Выброшено исключение: ' , $e->getMessage() , "\n";
-				echo '<pre>';
-				print_r( $e );
-				echo '</pre>' . __FILE__ . ' ' . __LINE__;
-				die( __FILE__ . ' ' . __LINE__ );
-			}
-			catch( Throwable $e )
-			{
-				// Executed only in PHP 7, will not match in PHP 5
-				echo 'Выброшено исключение: ' , $e->getMessage() , "\n";
-				echo '<pre>';
-				print_r( $e );
-				echo '</pre>' . __FILE__ . ' ' . __LINE__;
-				die( __FILE__ . ' ' . __LINE__ );
-			}
-			
-			return true;
-			
-			/*	echo'<pre>';print_r( $query->dump() );echo'</pre>'.__FILE__.' '.__LINE__;
-				echo'<pre>';print_r( $realColumns );echo'</pre>'.__FILE__.' '.__LINE__;
-				echo'<pre>';print_r( $styleTag );echo'</pre>'.__FILE__.' '.__LINE__;
-				die(__FILE__ .' '. __LINE__ );*/
-		}
+		
+		public static $cssFileDataDelayed ;
 		
 		
 		/**
@@ -340,6 +193,8 @@
 		 */
 		public function insertStylesIntoDocument(){
 			
+//			return ;
+			
 			$dom = new \GNZ11\Document\Dom();
 			
 			# Подключить Helper для работы со сылками
@@ -349,159 +204,39 @@
 			$tagsArr = [] ;
 			
 			
-			foreach( $this->BASE_LINK as $url => $Link )
+			
+			foreach( $this->cssFileData as $url => $Link )
 			{
 				if( isset($Link->load)  &&  !$Link->load  ) continue ; #END IF
 				
-				# Пропустить если отложенная загрузка
-				if ( isset($Link->delayed_loading)  && $Link->delayed_loading) continue ; #END IF
 				
+				# TODO LOAD:CSS - Add the ability to load CSS files as a Style tag.
 				$Linkcopy = $Link ;
 				unset($Linkcopy->id);
 				$Linkcopy->rel="stylesheet";
 				
 				# Подготовить ссылку к загрузи - определить параметры ссылки
-				$LinkData = $Links_assets->prepareLinkData( $Linkcopy );
+				$LinkData = \Plg\Pro_critical\Helpers\Assets\Css\Link::prepareLinkData( $Linkcopy );
+				
+				echo'<pre>';print_r( \Plg\Pro_critical\Helpers\Assets\Links::$Preload );echo'</pre>'.__FILE__.' '.__LINE__;
+				
+				echo'<pre>';print_r( $Link );echo'</pre>'.__FILE__.' '.__LINE__;
+				die(__FILE__ .' '. __LINE__ );
+				
+				
+				
+				echo'<pre>';print_r( $LinkData );echo'</pre>'.__FILE__.' '.__LINE__;
 				
 				# установить ссылку вниз Tag Head
 				$dom::writeBottomHeadTag('link' , null , $LinkData );
 			}#END FOREACH
 			
-			$Css_styleData = null ;
-			foreach( $this->BASE_STYLE as $item )
-			{
-				if( isset($Link->load)  &&  !$Link->load  ) continue ; #END IF
-				# Пропустить если отложенная загрузка
-				if ( isset($Link->delayed_loading)  && $Link->delayed_loading) continue ; #END IF
-				
-				# Подготовить стиле к загрузи - определить параметры стилей
-				$Css_styleData .= \Plg\Pro_critical\Helpers\Assets\Css\Style::prepareStyleData( $item );
-				
-				
-				
-//				echo'<pre>';print_r( $Css_styleData );echo'</pre>'.__FILE__.' '.__LINE__;
-//				die(__FILE__ .' '. __LINE__ );
-				
-			}#END FOREACH
-			
-			# установить ссылку вниз Tag Head
-			$dom::writeBottomHeadTag('style' , $Css_styleData , [] );
+			# Установка тегов стилей в документ
+			\Plg\Pro_critical\Helpers\Assets\Css\Style::setStyleTag( $this->cssStyleData );
 			
 			
-			
-//			die(__FILE__ .' '. __LINE__ );
 		}
 		
-		/**
-		 * Добавить в справочник новые найденные файлы
-		 *
-		 * @param $link
-		 *
-		 * @return bool
-		 *
-		 * @since version
-		 */
-		private function addNewLink ( $link , $excludeFields =[] )
-		{
-			
-			$excludeFields=['err','protocol','absolute_path',  ];
-			
-			if( !count( $link ) ) return true;
-			
-			$db = JFactory::getDbo();
-			$query   = $db->getQuery( true );
-			$jdata   = new JDate();
-			$now     = $jdata->toSql();
-			$userId  = JFactory::getUser()->id;
-			
-			$columns = [] ;
-			$firstElement = reset($link );
-			
-			foreach( $firstElement as $key => $itemFile )
-			{
-				if(  in_array( $key , $excludeFields ) ) {
-					continue ; 
-				}#END IF
-				$columns[]= $key ; 
-			}#END FOREACH
-			
-			$realColumns = $columns ;
-			
-			$columns[] = 'created_by';
-			$columns[] = 'created';
-			
-			
-			
-			
-			
-			
-			foreach( $link as  $itemFile )
-			{
-				$valuesArr =[] ; 
-				foreach( $realColumns as $key   )
-				{
-					$item = $itemFile[$key] ;
-					$valuesArr[] =  $db->quote( $item ) ;
-					
-				}#END FOREACH
-				$valuesArr[] = $db->quote( $userId ) ;
-				$valuesArr[] = $db->quote( $now ) ;
-				$query->values( implode( "," , $valuesArr) );
-			}//foreach
-			
-			
-			$query->insert( $db->quoteName( '#__pro_critical_css_file' ) )->columns( $db->quoteName( $columns ) );
-			$db->setQuery( $query );
-	 
-			try
-			{
-				// Code that may throw an Exception or Error.
-				$db->execute();
-			}
-			catch( Exception $e )
-			{
-				// Executed only in PHP 5, will not be reached in PHP 7
-				echo 'Выброшено исключение: ' , $e->getMessage() , "\n";
-				echo'<pre>';print_r(  $e );echo'</pre>'.__FILE__.' '.__LINE__;
-				die(__FILE__ .' '. __LINE__ );
-			}
-			catch( Throwable $e )
-			{
-				// Executed only in PHP 7, will not match in PHP 5
-				echo 'Выброшено исключение: ' , $e->getMessage() , "\n";
-				echo '<pre>'; print_r( $e ); echo '</pre>' . __FILE__ . ' ' . __LINE__;
-				die( __FILE__ . ' ' . __LINE__ );
-			}
-			
-			return true;
-		}
-		
-		/**
-		 * Разобрать параметры запроса
-		 *
-		 * @param   array  $hrefArr
-		 * @param   array  $link
-		 * @param          $href
-		 *
-		 * @return array
-		 *
-		 * @since version
-		 */
-		protected function parseRequestParameters ( array $hrefArr , array $link , $href )
-		{
-			$paramHrefArr = explode( '&' , $hrefArr[ 1 ] );
-			$i            = 0;
-			foreach( $paramHrefArr as $item )
-			{
-				$paramArr                                                          = explode( '=' , $item );
-				$nam                                                               = $paramArr[ 0 ];
-				$val                                                               = $paramArr[ 1 ];
-				$link[ $href ][ 'params_query' ][ 'params_query' . $i ][ 'name' ]  = $nam;
-				$link[ $href ][ 'params_query' ][ 'params_query' . $i ][ 'value' ] = $val;
-				$i++;
-			}#END FOREACH
-			return json_encode( $link[ $href ][ 'params_query' ] );
-		}
 		
 		
 		

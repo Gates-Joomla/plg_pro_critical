@@ -11,6 +11,7 @@
 	use JResponseJson;
 	use Exception;
 	use Joomla\CMS\Component\ComponentHelper;
+	use Throwable;
 	
 	// No direct access to this file
 	defined( '_JEXEC' ) or die( 'Restricted access' );
@@ -57,6 +58,7 @@
 			$this->params = $params ;
 			
 			$Component = ComponentHelper::getComponent('com_pro_critical', $strict = true);
+			
 			if(!$Component->id ){
 				$mes = 'Для правильной работы <b>плагина Pro Critical</b> - должен быть установлен и включен <b>компонент Pro Critical</b>' ;
 				if( $this->app->input->get('format' , 'html' , 'STRING') == 'json' ) {
@@ -66,6 +68,16 @@
 				$this->app->enqueueMessage($mes , 'warning');
 				throw new Exception( $mes , 500 );
 			}
+			# TODO - добавить сообщение для фронта
+			#Если включен ркжим отладки
+			if( JDEBUG )
+			{
+				// throw new Exception( null , 500 );
+			}#END IF
+			
+			
+			
+			
 			$this->paramsComponent = ComponentHelper::getParams( 'com_pro_critical' );
 			$this->paramsComponent->set('plugin_param' , $this->params ) ;
 			JLoader::register( 'Pro_criticalHelper', JPATH_ADMINISTRATOR . '/components/com_pro_critical/helpers/pro_critical.php' );
@@ -177,10 +189,36 @@
 		public function AfterRender(){
 			
 			$HelpersCss = Helpers\Assets\Css::instance();
-			# Найти и извлечь все ссылки на CSS файлы и теги стили
-			$HelpersCss->getFileList();
-			# Установить в HTML ссылки на Css файлы и стили
-			$HelpersCss->insertStylesIntoDocument();
+			try
+			{
+				// Code that may throw an Exception or Error.
+				# Найти и извлечь все ссылки на CSS файлы и теги стили
+				$HelpersCss->getFileList();
+				
+				# Установить в HTML ссылки на Css файлы и стили
+				$HelpersCss->insertStylesIntoDocument();
+			}
+			catch( Exception $e )
+			{
+				// Executed only in PHP 5, will not be reached in PHP 7
+				echo 'Выброшено исключение: ' , $e->getMessage() , "\n";
+				echo '<pre>';
+				print_r( $e );
+				echo '</pre>' . __FILE__ . ' ' . __LINE__;
+				die( __FILE__ . ' ' . __LINE__ );
+			}
+			catch( Throwable $e )
+			{
+				// Executed only in PHP 7, will not match in PHP 5
+				echo 'Выброшено исключение: ' , $e->getMessage() , "\n";
+				echo '<pre>';
+				print_r( $e );
+				echo '</pre>' . __FILE__ . ' ' . __LINE__;
+				die( __FILE__ . ' ' . __LINE__ );
+			}
+			
+			
+			
 			
 			
 			
