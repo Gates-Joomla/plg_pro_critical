@@ -2,6 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../../Oleg/Libraries/GNZ11/.idea/GNZ11.iml" filepath="$PROJECT_DIR$/../../Oleg/Libraries/GNZ11/.idea/GNZ11.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../com_pro_critical/.idea/com_pro_critical.iml" filepath="$PROJECT_DIR$/../com_pro_critical/.idea/com_pro_critical.iml" />
       <module fileurl="file://$PROJECT_DIR$/.idea/plg_pro_critical.iml" filepath="$PROJECT_DIR$/.idea/plg_pro_critical.iml" />
     </modules>
   </component>

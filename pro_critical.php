@@ -100,7 +100,6 @@ class PlgSystemPro_critical extends CMSPlugin
 		public function onAfterRoute ()
 		{
 			if( $this->SLEEP ) return false ; #END IF
-			
 			return true;
 		}
 		
@@ -116,9 +115,7 @@ class PlgSystemPro_critical extends CMSPlugin
 		public function onBeforeCompileHead ()
 		{
 			if( $this->SLEEP ) return false ; #END IF
-			
 			$this->Helper->BeforeCompileHead();
-			
 			return true;
 		}
 		
