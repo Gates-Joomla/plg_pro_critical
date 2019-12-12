@@ -164,6 +164,7 @@ class PlgSystemPro_critical extends CMSPlugin
 		 */
 		public function onAfterCompress ()
 		{
+			
 			if( $this->SLEEP ) return false ; #END IF
 			
 			return true;
@@ -179,6 +180,7 @@ class PlgSystemPro_critical extends CMSPlugin
 		 */
 		public function onAfterRespond ()
 		{
+			
 			if( $this->SLEEP ) return false ; #END IF
 			die(__FILE__ .' '. __LINE__ );
 			return true;

@@ -32,10 +32,6 @@
 		
 		public $cssFileData;
 		public $cssStyleData;
-		
-		
-		
-		
 		/**
 		 * Имя компонента для вызова модели
 		 * @since 3.9
@@ -123,6 +119,10 @@
 						$hash = md5( $attr[ 'href' ] ) ;
 						$hashArrLink[] = $hash ;
 						
+						
+						
+						
+						
 						$hrefArr = explode( '?' , $attr[ 'href' ] );
 						
 						unset( $attr[ 'href' ] );
@@ -169,13 +169,23 @@
 			$body = $dom->saveHTML();
 			$this->app->setBody( $body );
 			
+			
+			
+			
 			# Объеденить с данными из базы модели
 			$this->cssFileData = self::getItemsByHash( $hashArrLink , 'css_file' , $link ) ;
+			
+			
+			
 			# Добавить в справочник новые найденные файлы
 			self::addNewLink( $this->cssFileData , 'css_file' );
 			
+			
 			# Объеденить с данными из базы модели css_style
 			$this->cssStyleData = self::getItemsByHash( $hashArr , 'css_style' , $styleTag ) ;
+			
+			
+			
 			# Добавить в справочник новые найденные css_style
 			self::addNewLink( $this->cssStyleData , 'css_style' );
 		
@@ -193,7 +203,17 @@
 		 */
 		public function insertStylesIntoDocument(){
 			
-//			return ;
+			
+			
+			$ParamsComponent = self::getParamsComponent();
+			$dom_params = [] ;
+			
+			
+			
+			/*if( isset($ParamsComponent['css_link_load_method']) && $ParamsComponent['css_link_load_method'] )
+			{
+				$dom_params['formatOutput'] = true;
+			}#END IF*/
 			
 			$dom = new \GNZ11\Document\Dom();
 			
@@ -202,7 +222,6 @@
 			
 			# массив для HTML элементов
 			$tagsArr = [] ;
-			
 			
 			
 			foreach( $this->cssFileData as $url => $Link )
@@ -218,17 +237,9 @@
 				# Подготовить ссылку к загрузи - определить параметры ссылки
 				$LinkData = \Plg\Pro_critical\Helpers\Assets\Css\Link::prepareLinkData( $Linkcopy );
 				
-				echo'<pre>';print_r( \Plg\Pro_critical\Helpers\Assets\Links::$Preload );echo'</pre>'.__FILE__.' '.__LINE__;
-				
-				echo'<pre>';print_r( $Link );echo'</pre>'.__FILE__.' '.__LINE__;
-				die(__FILE__ .' '. __LINE__ );
-				
-				
-				
-				echo'<pre>';print_r( $LinkData );echo'</pre>'.__FILE__.' '.__LINE__;
-				
 				# установить ссылку вниз Tag Head
-				$dom::writeBottomHeadTag('link' , null , $LinkData );
+				$dom::writeBottomHeadTag('link' , null , $Linkcopy , $dom_params );
+				
 			}#END FOREACH
 			
 			# Установка тегов стилей в документ

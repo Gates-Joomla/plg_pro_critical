@@ -12,6 +12,10 @@
 	 */
 	class Link extends Links
 	{
+		
+		
+		
+		
 		/**
 		 * Подготовить ссылку к загрузи
 		 * @param $Link
@@ -21,25 +25,20 @@
 		 * @since version
 		 */
 		public static function prepareLinkData ( $Link ){
+			
+			$MediaVersion = self::getMediaVersion()  ;
+			
 			$Link->href = Links::prepareLinkData($Link);
-			
-			return ;
-			
-			echo'<pre>';print_r( $Link->href );echo'</pre>'.__FILE__.' '.__LINE__;
-			die(__FILE__ .' '. __LINE__ );
-			
-			
 			
 			# id Revision
 			if( isset( $Link->ver_type ) && $Link->ver_type && !empty( $Link->revision_id ) )
 			{
 				$Link->href .= '?i=' . $Link->revision_id;
 			}else{
-				$Link->href .= '?i=' . $this->MediaVersion ;
+				$Link->href .= '?i=' . $MediaVersion ;
 			}#END IF
 			
-			echo'<pre>';print_r(  $Link );echo'</pre>'.__FILE__.' '.__LINE__;
-			die(__FILE__ .' '. __LINE__ );
+			
 			
 			
 			if ( isset($Link->params_query) && $Link->params_query ) {
@@ -49,7 +48,10 @@
 				$params_query = json_decode( $Link->params_query );
 				foreach( $params_query as $query )
 				{
+					if( $query->value == $MediaVersion || $query->name == $MediaVersion ) continue ; #END IF
+					
 					if( isset($query->published) && !$query->published ) continue ;
+					
 					$queryStr .= !$i ?'':'&' ;
 					$queryStr .= $query->name. ( !empty($query->value)?'='.$query->value:'' ) ;
 					$i++;

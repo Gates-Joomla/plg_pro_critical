@@ -160,7 +160,7 @@
 				$option_id = $Component->getOptionId();
 				$view_id = $Component->getViewId();
 			}
-			
+		 
 			
 			
 			
@@ -189,6 +189,7 @@
 		public function AfterRender(){
 			
 			$HelpersCss = Helpers\Assets\Css::instance();
+			
 			try
 			{
 				// Code that may throw an Exception or Error.
@@ -202,8 +203,7 @@
 			{
 				// Executed only in PHP 5, will not be reached in PHP 7
 				echo 'Выброшено исключение: ' , $e->getMessage() , "\n";
-				echo '<pre>';
-				print_r( $e );
+				echo '<pre>'; print_r( $e );
 				echo '</pre>' . __FILE__ . ' ' . __LINE__;
 				die( __FILE__ . ' ' . __LINE__ );
 			}
@@ -217,8 +217,10 @@
 				die( __FILE__ . ' ' . __LINE__ );
 			}
 			
-			
-			
+			$HelpersJs = Helpers\Assets\Js::instance();
+			# Извлечь из страницы в скриты и ссылку на Js файлы
+			# добавить новые найденые в справочники
+			$HelpersJs->getListJs();
 			
 			
 			

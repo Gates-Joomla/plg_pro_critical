@@ -11,6 +11,38 @@
 	
 	class Assets
 	{
+		public static $paramsComponent = null ;
+		
+		
+		
+		/**
+		 * Assets constructor.
+		 */
+		public function __construct ()
+		{
+		
+		}
+		
+		/**
+		 * Получить параметры копонента com_pro_critical
+		 * @return array|null
+		 * @since 3.9
+		 */
+		public static function getParamsComponent ()
+		{
+			if( !self::$paramsComponent )
+			{
+				$comparams             = \JComponentHelper::getParams( 'com_pro_critical' );
+				self::$paramsComponent       = $comparams->toArray();
+			}#END IF
+			
+			return self::$paramsComponent;
+		}
+		
+		
+		
+		
+		
 		
 		/**
 		 * Получить из справочника Ресурсов по hash
@@ -21,7 +53,7 @@
 		 */
 		public static function getItemsByHash($HashArr , $model , $Merge = false ){
 			
-			$db = JFactory::getDbo() ;
+			$db = \JFactory::getDbo() ;
 			$query = $db->getQuery(true);
 			$query->select('*')->from($db->quoteName('#__pro_critical_'.$model ));
 			
@@ -61,8 +93,14 @@
 		 */
 		protected static function addNewLink ( $link , $Model , $excludeFields =[] )
 		{
+			# Если включена отладка системы - не сохраняем в справочники
+			$config = \Joomla\CMS\Factory::getConfig();
+			if( $config->get('debug' , 0 ) )
+			{
+				return true;
+			}#END IF
 			
-			$excludeFields=['err','protocol','absolute_path','created',  'created_by',    ];
+			$excludeFields=['err','protocol','absolute_path','created',  'created_by',   'published' ];
 			
 			if( !count( $link ) ) return true;
 			
@@ -86,13 +124,17 @@
 			
 			$columns[] = 'created_by';
 			$columns[] = 'created';
+			$columns[] = 'published';
 			
 			$count_new_field = null ;
+			
 			foreach( $link as  $itemFile )
 			{
-				$valuesArr = [] ;
+				
 				if( isset( $itemFile->published ) &&  $itemFile->published ) continue ;  #END IF
 				
+				
+				$valuesArr = [] ;
 				foreach( $realColumns as $key   )
 				{
 					$item = false ;
@@ -104,9 +146,13 @@
 				}#END FOREACH
 				$valuesArr[] = $db->quote( $userId ) ;
 				$valuesArr[] = $db->quote( $now ) ;
+				$valuesArr[] = $db->quote( 1 ) ;
+				
+				
 				$query->values( implode( "," , $valuesArr) );
 				$count_new_field ++ ;
 			}//foreach
+			
 			if( !$count_new_field )
 			{
 				return true;
@@ -116,7 +162,7 @@
 			$db->setQuery( $query );
 			
 //			echo 'Query Dump :'.__FILE__ .' Line:'.__LINE__  .$query->dump() ;
-			// die(__FILE__ .' '. __LINE__ );
+			
 			
 			try
 			{

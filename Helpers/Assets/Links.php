@@ -16,9 +16,13 @@
 	{
 		
 		public static $Preload ;
+		/**
+		 * @var string
+		 * @since 3.9
+		 */
+		public static $MediaVersion;
 		
 		public static $instance;
-		
 		/**
 		 * helper constructor.
 		 * @throws Exception
@@ -28,9 +32,9 @@
 		{
 			
 			
+			
 			return $this;
-		}#END FN
-		
+		}
 		/**
 		 * @param   array  $options
 		 *
@@ -48,6 +52,27 @@
 			return self::$instance;
 		}#END FN
 		
+		/**
+		 * @param   string
+		 * @since 3.9
+		 */
+		public static function setMediaVersion ()
+		{
+			$doc = \Joomla\CMS\Factory::getDocument();
+			self::$MediaVersion = $doc->getMediaVersion() ;
+		}
+		
+		/**
+		 * @return string
+		 */
+		public static function getMediaVersion ()
+		{
+			if( !self::$MediaVersion )
+			{
+				self::setMediaVersion() ;
+			}#END IF
+			return self::$MediaVersion;
+		}#END FN
 		
 		/**
 		 * Парсинг параметры запроса
@@ -108,17 +133,33 @@
 			if ( isset($Link->delayed_loading)  && $Link->delayed_loading) {
 			
 			} #END IF
+			
 			# Если с прелоадером
-		//	if ($Link->preload) self::setPreload($Link);
-			
-			
-			self::$Preload[] = 'aaaa' ;
-			self::$Preload[] = 'bbbb' ;
-			self::$Preload[] = 'cccc' ;
-			
+			if ($Link->preload) self::setPreload($Link);
 			
 			
 			return $Link->href ;
+		}
+		
+		/**
+		 * Проверка на кроссдоменн
+		 * @param $url
+		 *
+		 * @return bool
+		 * @since 3.9
+		 */
+		public static function checkCrossorigin( $url ){
+			$local = \JUri::root();
+			$pUrl = parse_url($url) ;
+			$pLocalUrl = parse_url( $local ) ;
+			if( isset( $pUrl['host']  ) )
+			{
+				if( $pUrl['host'] != $pLocalUrl['host'] )
+				{
+					return true ;
+				}#END IF
+			}#END IF
+			return false ;
 		}
 		
 		/**
@@ -138,12 +179,14 @@
 				$url   = $preload->src ;
 			}elseif (isset($preload->url )){
 				$url   = $preload->url ;
+			}else{
+				$url = $preload->href ;
 			}
 			
 			$preconnect['rel'] = $typeDefault ;
 			
 			#Проверка на кроссдоменн
-//			$preconnect['crossorigin'] =    helper::checkCrossorigin( $url   )   ;
+			$preconnect['crossorigin'] =    self::checkCrossorigin( $url   )   ;
 			
 			
 			$pUrl = parse_url($url) ;
@@ -156,8 +199,10 @@
 				$info = new \SplFileInfo( $url  );
 				
 			}
-			// $Ext = $info->getExtension();
-			$Ext = 'css' ;
+			
+			// Получаем расшерение
+			$Ext = $info->getExtension();
+			
 			
 			
 			
@@ -183,6 +228,7 @@
 					$preconnect['as'] = 'font' ;
 					break ;
 			}#END SWITCH
+			
 			
 			self::$Preload[$url] =    $preconnect  ;
 		}#END FN

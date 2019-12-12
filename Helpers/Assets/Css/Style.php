@@ -40,6 +40,7 @@
 			$paramsComponent       = $comparams->toArray();
 			$css_style_load_method = $paramsComponent[ 'css_style_load_method' ];
 			
+			
 			$Css_styleData = null;
 			foreach( $Link as $item )
 			{
@@ -54,7 +55,7 @@
 				if( $css_style_load_method )
 				{
 					# установить ссылку вниз Tag Head
-					$dom::writeBottomHeadTag( 'style' , $Css_styleData , [] );
+					$dom::writeBottomHeadTag( 'style' , $Css_styleData  );
 					$Css_styleData = null;
 					
 				}#END IF
@@ -64,7 +65,7 @@
 			if( !$css_style_load_method )
 			{
 				# установить ссылку вниз Tag Head
-				$dom::writeBottomHeadTag( 'style' , $Css_styleData , [] );
+				$dom::writeBottomHeadTag( 'style' , $Css_styleData  );
 			}#END IF
 		}
 		
