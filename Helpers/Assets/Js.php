@@ -2,7 +2,8 @@
 	
 	
 	namespace Plg\Pro_critical\Helpers\Assets;
-	use JFactory;
+	
+	use Joomla\CMS\Factory as JFactory ;
 	use JLoader;
 	use JModelLegacy;
 	use Exception;
@@ -27,14 +28,15 @@
 		 */
 		private function __construct ( $options = [] )
 		{
-			$this->app = JFactory::getApplication();
+			// parent::__construct ( $options );
+			$this->app = \JFactory::getApplication();
 			return $this;
 		}#END FN
 		
 		/**
 		 * @param   array  $options
 		 *
-		 * @return helper
+		 * @return Js
 		 * @throws \Exception
 		 * @since 3.9
 		 */
@@ -48,7 +50,11 @@
 			return self::$instance;
 		}#END FN
 		
-		
+		/**
+		 * Извлечь из страницы в скриты и ссылки на Js файлы
+		 * добавить новые найденые в справочники
+		 * @since 3.9
+		 */
 		public function getListJs(){
 			$body = $this->app->getBody();
 			
@@ -95,6 +101,11 @@
 					
 					unset( $link[$hash]->src );
 					
+				}else{
+					
+					echo'<pre>';print_r( $attr );echo'</pre>'.__FILE__.' '.__LINE__;
+					echo'<pre>';print_r( $node );echo'</pre>'.__FILE__.' '.__LINE__;
+					die(__FILE__ .' '. __LINE__ );
 				}#END IF
 				
 				
@@ -111,6 +122,31 @@
 			# Добавить в справочник новые найденные файлы
 			self::addNewLink( $this->jsFileData , 'js_file' );
 		}
+		
+		/**
+		 * Установить в HTML ссылки на JS файлы
+		 * @throws Exception
+		 * @since 3.9
+		 */
+		public function insertJsLikIntoDocument(){
+			$dom = new \GNZ11\Document\Dom();
+			
+			foreach( $this->jsFileData as $url => $Link )
+			{
+				if( isset($Link->load)  &&  !$Link->load  ) continue ; #END IF
+				
+				unset($Link->id) ;
+				
+				# Подготовить ссылку  Js к загрузи - определить параметры ссылки
+				$LinkData = \Plg\Pro_critical\Helpers\Assets\Js\Link::prepareJsLinkData( $Link );
+				
+				# Добавить тег ссылка Js в тело документа перед закрывающемся тегом </body>
+				$dom::writeDownTag('script' , null , $Link   );
+			}#END FOREACH
+			
+		}#END FN
+		
+		
 		
 		
 	}

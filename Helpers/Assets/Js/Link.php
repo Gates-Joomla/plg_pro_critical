@@ -1,7 +1,7 @@
 <?php
 	
 	
-	namespace Plg\Pro_critical\Helpers\Assets\Css;
+	namespace Plg\Pro_critical\Helpers\Assets\Js;
 	
 	use Plg\Pro_critical\Helpers\Assets\Links;
 	
@@ -24,17 +24,11 @@
 		 *
 		 * @since version
 		 */
-		public static function prepareLinkCssData ( $Link ){
+		public static function prepareJsLinkData ( $Link  ){
 			
-			
-			# Предварительная обработка ссылок на ресурсы
-			Links::prepareLinkData($Link);
-			
-			
-			
-			
-			$dataLink = $Link ;
-			return $dataLink ;
+			Links::prepareLinkData( $Link , 'js');
+
+			return $Link ;
 		}
 	
 	

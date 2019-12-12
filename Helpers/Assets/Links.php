@@ -116,29 +116,73 @@
 		 * @return mixed
 		 * @since 3.9
 		 */
-		public static function prepareLinkData ( $Link ){
-			$Link->href = $Link->file   ;
+		public static function prepareLinkData ( $Link , $type = 'css' ){
+			$href = $Link->file   ;
+			
+			
+			
 			# Переопределение
 			if ( isset( $Link->override ) && !empty( $Link->override_file ) && $Link->override   )
-				$Link->href = $Link->override_file ; #END IF
+				$href = $Link->override_file ; #END IF
 			
 			# режим разработки отключен
 			if ( !$Link->file_debug ){
 				# Мин версия
 				if ( isset($Link->minify) && $Link->minify && !empty( $Link->minify_file )  )
-					$Link->href = $Link->minify_file ; #END IF
+					$href = $Link->minify_file ; #END IF
 			}#END IF
 			
+			# TODO - Доделать delayed loading
 			# Пропустить если отложенная загрузка
 			if ( isset($Link->delayed_loading)  && $Link->delayed_loading) {
 			
 			} #END IF
 			
+			
+			$MediaVersion = self::getMediaVersion()  ;
+			# id Revision
+			if( isset( $Link->ver_type ) && $Link->ver_type && !empty( $Link->revision_id ) )
+			{
+				$href .= '?i=' . $Link->revision_id;
+			}else{
+				$href .= '?i=' . $MediaVersion ;
+			}#END IF
+			
+			if ( isset($Link->params_query) && $Link->params_query ) {
+				
+				$i = null ;
+				$queryStr = null ;
+				$params_query = json_decode( $Link->params_query );
+				foreach( $params_query as $query )
+				{
+					if( $query->value == $MediaVersion || $query->name == $MediaVersion ) continue ; #END IF
+					
+					if( isset($query->published) && !$query->published ) continue ;
+					
+					$queryStr .= !$i ?'':'&' ;
+					$queryStr .= $query->name. ( !empty($query->value)?'='.$query->value:'' ) ;
+					$i++;
+				}#END FOREACH
+				
+				$href .= ( !empty($queryStr) ? '&' . $queryStr : null ) ;
+				
+			}
+			
 			# Если с прелоадером
 			if ($Link->preload) self::setPreload($Link);
 			
 			
-			return $Link->href ;
+			
+			
+			switch($type){
+				case 'js' :
+					$Link->src = $href;
+				break ;
+				default :
+					$Link->href	= $href ;
+			}
+			
+			return true ;
 		}
 		
 		/**

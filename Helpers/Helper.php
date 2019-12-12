@@ -217,11 +217,15 @@
 				die( __FILE__ . ' ' . __LINE__ );
 			}
 			
-			$HelpersJs = Helpers\Assets\Js::instance();
-			# Извлечь из страницы в скриты и ссылку на Js файлы
+			 $HelpersJs = Helpers\Assets\Js::instance();
+			# Извлечь из страницы в скриты и ссылки на Js файлы
 			# добавить новые найденые в справочники
 			$HelpersJs->getListJs();
 			
+			
+			
+			# Установить в HTML ссылки на JS файлы
+			$HelpersJs->insertJsLikIntoDocument();
 			
 			
 			

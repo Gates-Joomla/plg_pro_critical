@@ -235,7 +235,9 @@
 				$Linkcopy->rel="stylesheet";
 				
 				# Подготовить ссылку к загрузи - определить параметры ссылки
-				$LinkData = \Plg\Pro_critical\Helpers\Assets\Css\Link::prepareLinkData( $Linkcopy );
+				$LinkData = \Plg\Pro_critical\Helpers\Assets\Css\Link::prepareLinkCssData( $Linkcopy );
+				
+				
 				
 				# установить ссылку вниз Tag Head
 				$dom::writeBottomHeadTag('link' , null , $Linkcopy , $dom_params );
