@@ -40,10 +40,6 @@
 		}
 		
 		
-		
-		
-		
-		
 		/**
 		 * Получить из справочника Ресурсов по hash
 		 * @param $HashArr
@@ -78,6 +74,9 @@
 			
 			return $Items ;
 		}
+		
+		
+		
 		
 		/**
 		 * Добавить в справочник Assets(ресурсы) новые найденные данные
@@ -187,5 +186,55 @@
 			return true;
 		}
 		
+		/**
+		 * Подготовить данные для сабформы name|value|published
+		 *
+		 *
+		 * @param          $subFormName
+		 * @param   array  $attr
+		 *
+		 * @return bool|false|float|string|null
+		 * @since 3.9
+		 */
+		public static function getSubFormLinksData ( $subFormName , $attr = [] )
+		{
+			if( count( $attr ) == null ) return null; #END IF
+			
+			$res = [];
+			
+			
+			$i = 0;
+			foreach( $attr as $name => $value )
+			{
+				$res[ $subFormName . $i ] = [ 'name' => $name , 'value' => $value , 'published' => true ];
+				$i++;
+			}#END FOREACH
+			
+			return json_encode( $res );
+		}
+		
+		/**
+		 * Слить json строку с параметрами объекта из спровочника ...
+		 * @param $subFormName string - Имя параметра в котором находится стр. json с дфнными
+		 * @param $Link object - Параметры из справочника ссылок или тегов
+		 *
+		 * @return mixed
+		 * @since 3.9
+		 */
+		public static function mergeSubFormLinksParams( $subFormName , $Link )
+		{
+			$subFormParams = json_decode( $Link->{$subFormName} );
+			
+			if( empty( $subFormParams ) ) return $Link ;  #END IF
+			
+			foreach( $subFormParams as $subFormParam )
+			{
+				if( !$subFormParam->published ) continue ; #END IF
+				$name = $subFormParam->name ;
+				$value = $subFormParam->value ;
+				$Link->{$name} =$value ;
+			}#END FOREACH
+			return $Link ;
+		}
 		
 	}

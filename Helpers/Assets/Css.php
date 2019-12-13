@@ -184,11 +184,9 @@
 			# Объеденить с данными из базы модели css_style
 			$this->cssStyleData = self::getItemsByHash( $hashArr , 'css_style' , $styleTag ) ;
 			
-			
-			
 			# Добавить в справочник новые найденные css_style
 			self::addNewLink( $this->cssStyleData , 'css_style' );
-		
+			
 		}
 		
 		

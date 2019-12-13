@@ -227,6 +227,8 @@
 			# Установить в HTML ссылки на JS файлы
 			$HelpersJs->insertJsLikIntoDocument();
 			
+			$HelpersJs->insertJsSctiptIntoDocument();
+			
 			
 			
 			
