@@ -166,9 +166,6 @@
 			
 			# Только для ADMIN
 			if( !$this->app->isClient( 'administrator' ) ) return ;
-			
-			
-			
 			# установка ресурсов для админ панели
 			\Com_pro_critical\Helpers\helper::settingsAdminViews() ;
 			
@@ -217,7 +214,7 @@
 				die( __FILE__ . ' ' . __LINE__ );
 			}
 			
-			 $HelpersJs = Helpers\Assets\Js::instance();
+			$HelpersJs = Helpers\Assets\Js::instance();
 			# Извлечь из страницы в скриты и ссылки на Js файлы
 			# добавить новые найденые в справочники
 			$HelpersJs->getListJs();
@@ -226,10 +223,14 @@
 			
 			# Установить в HTML ссылки на JS файлы
 			$HelpersJs->insertJsLikIntoDocument();
-			
+			# Установить   JS скрипты в тело документа
 			$HelpersJs->insertJsSctiptIntoDocument();
 			
 			
+			
+			# Установка методов предварительной загрузки
+			# preload | prefetch
+			Helpers\Assets\Links::setPreconectLinks();
 			
 			
 		}

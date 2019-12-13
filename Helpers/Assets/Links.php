@@ -30,9 +30,6 @@
 		 */
 		private function __construct ( $options = [] )
 		{
-			
-			
-			
 			return $this;
 		}
 		/**
@@ -53,17 +50,38 @@
 		}#END FN
 		
 		/**
+		 * Установка методов предварительной загрузки
+		 * preload | prefetch
+		 * @return bool
+		 * @throws Exception
+		 * @since 3.9
+		 */
+		public static function setPreconectLinks()
+		{
+			if( !count( self::$Preload ) ) return true;
+			$dom = new \GNZ11\Document\Dom();
+			foreach( self::$Preload as $href => $attr )
+			{
+				$attr[ 'href' ] = $href;
+				$dom::writeTopHeadTag( 'link' , '' , $attr );
+			}#END FOREACH
+			return true;
+		}
+		
+		
+		/**
 		 * @param   string
 		 * @since 3.9
 		 */
 		public static function setMediaVersion ()
 		{
-			$doc = \Joomla\CMS\Factory::getDocument();
+			$doc = Factory::getDocument();
 			self::$MediaVersion = $doc->getMediaVersion() ;
 		}
 		
 		/**
 		 * @return string
+		 * @since 3.9
 		 */
 		public static function getMediaVersion ()
 		{
@@ -79,7 +97,7 @@
 		 *
 		 * @param   array  $hrefArr
 		 *
-		 * @return array or null
+		 * @return bool|false|float|string
 		 *
 		 * @since 3.9
 		 */
@@ -168,8 +186,7 @@
 				
 			}
 			
-			# Если с прелоадером
-			if ($Link->preload) self::setPreload($Link);
+			
 			
 			
 			
@@ -181,6 +198,9 @@
 				default :
 					$Link->href	= $href ;
 			}
+			
+			# Если с прелоадером
+			if ($Link->preload) self::setPreload($Link , $type);
 			
 			return true ;
 		}
@@ -209,16 +229,20 @@
 		/**
 		 * Добавить в список предворительных загрузок ресурсов
 		 *
-		 * @param        $preload
-		 * @param string $typeDefault
-		 *
-		 * @author    Gartes
+		 * @param   object  $preload
+		 * @param   string  $typeDefault
+		 * @param   string  $typeLink
 		 *
 		 * @since     3.8
+		 * @author    Gartes
+		 *
 		 * @copyright 05.01.19
 		 */
-		public static function setPreload ( $preload , $typeDefault = 'preload'  )
+		public static function setPreload ( $preload , $typeLink, $typeDefault = 'preload'  )
 		{
+			
+		 
+			
 			if (isset($preload->src)) {
 				$url   = $preload->src ;
 			}elseif (isset($preload->url )){
@@ -234,6 +258,8 @@
 			
 			
 			$pUrl = parse_url($url) ;
+			
+			
 			
 			if (isset($pUrl['path'])){
 				
@@ -275,6 +301,10 @@
 			
 			
 			self::$Preload[$url] =    $preconnect  ;
+			
+			
+			
+			
 		}#END FN
 		
 		/**

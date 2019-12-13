@@ -23,6 +23,10 @@
 		
 		}
 		
+		
+		
+		
+		
 		/**
 		 * Получить параметры копонента com_pro_critical
 		 * @return array|null
