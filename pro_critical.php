@@ -64,6 +64,21 @@ class PlgSystemPro_critical extends CMSPlugin
 		{
 			parent::__construct( $subject , $config );
 			$this->app = JFactory::getApplication();
+			
+			JLoader::registerNamespace( 'Plg\Pro_critical' , JPATH_PLUGINS . '/system/pro_critical/Helpers' , $reset = false , $prepend = false , $type = 'psr4' );
+			JLoader::registerNamespace( 'GNZ11' , JPATH_LIBRARIES . '/GNZ11' , $reset = false , $prepend = false , $type = 'psr4' );
+			
+			
+			
+			try
+			{
+				$this->Helper = \Plg\Pro_critical\Helper::instance( $this->params );
+			}
+			catch( Exception $e )
+			{
+				$this->SLEEP = true;
+				
+			}
 
 		}
 		
@@ -77,18 +92,7 @@ class PlgSystemPro_critical extends CMSPlugin
 		public function onAfterInitialise ()
 		{
 			
-			JLoader::registerNamespace( 'Plg\Pro_critical' , JPATH_PLUGINS . '/system/pro_critical/Helpers' , $reset = false , $prepend = false , $type = 'psr4' );
-			JLoader::registerNamespace( 'GNZ11' , JPATH_LIBRARIES . '/GNZ11' , $reset = false , $prepend = false , $type = 'psr4' );
-			
-			try
-			{
-				$this->Helper = \Plg\Pro_critical\Helper::instance( $this->params );
-			}
-			catch( Exception $e )
-			{
-				$this->SLEEP = true;
-
-			}
+		
 		}
 		
 		/**
@@ -144,7 +148,6 @@ class PlgSystemPro_critical extends CMSPlugin
 			if( $this->SLEEP ) return false ; #END IF
 			# Если Админ Панель
 			if( $this->app->isClient( 'administrator' ) ) return true; #END IF
-			
 			
 			$this->Helper->AfterRender();
 			

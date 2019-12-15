@@ -38,7 +38,6 @@
 //			$shorten_setting = $this->paramsComponent->get('shorten_setting' , false ) ;
 //			echo'<pre>';print_r( json_encode( $shorten_setting ) );echo'</pre>'.__FILE__.' '.__LINE__;
 //			die(__FILE__ .' '. __LINE__ );
-			
 		}
 		
 		/**
@@ -103,20 +102,15 @@
 				
 			}#END IF
 			
-			
 			if( !Folder::exists( $cache_directory ) )
 			{
 				Folder::create( $cache_directory );
 			}#END IF
 			
-			
-			
-			
 			$contents = Helper_site::get_url(   $originalFilePath );
 			
 			$handler = @fopen( $filePath , 'w' );
 			
-		
 			if( !$handler )
 			{
 				fclose( $handler );
@@ -135,16 +129,12 @@
 			$dataForm['jform']['override_file'] = $filePathUrlOverride ;
 			$dataForm['jform']['last_update'] = $now ;
 			
-			
-			
 			if( $Route->save($dataForm) )
 			{
 				$mes = 'Внешнний файл загружен.<br>Создано локальное переопределение';
 				$this->app->enqueueMessage($mes );
 				return $dataForm['jform']  ;
 			}#END IF
-			
-			
 			
 			return true ;
 		}

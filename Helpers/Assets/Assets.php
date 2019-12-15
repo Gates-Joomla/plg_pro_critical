@@ -8,24 +8,20 @@
 	use Exception;
 	use JFactory;
 	use JDate;
+	use Pro_criticalHelper ;
 	
 	class Assets
 	{
 		public static $paramsComponent = null ;
 		
-		
-		
 		/**
 		 * Assets constructor.
+		 * @since 3.9
 		 */
 		public function __construct ()
 		{
 		
 		}
-		
-		
-		
-		
 		
 		/**
 		 * Получить параметры копонента com_pro_critical
@@ -43,6 +39,35 @@
 			return self::$paramsComponent;
 		}
 		
+		/**
+		 * Получить из модели данный по ID
+		 *
+		 * @param $ids array|int id
+		 * @param $model string Имя модели
+		 * @param $key string Имя поля, в которое нужно ввести результирующий массив.
+		 *
+		 * @return mixed
+		 * @since 3.9
+		 */
+		public static function getAssetsById ($ids , $model , $key = '' ){
+			
+			if( !Pro_criticalHelper::checkArray($ids) )
+			{
+				$ids = array($ids);
+			}#END IF
+			
+			$db = \JFactory::getDbo();
+			$query = $db->getQuery( true ) ;
+			$query->select('*')->from('#__pro_critical_'.$model );
+			
+			$where[] = $db->quoteName('id') .  'IN ( "' . implode('","' , $ids ) . '")' ;
+			
+			$query->where( $where ) ;
+			// echo 'Query Dump :'.__FILE__ .' Line:'.__LINE__  .$query->dump() ;
+			$db->setQuery($query);
+			$res = $db->loadObjectList($key);
+			return $res ;
+		}
 		
 		/**
 		 * Получить из справочника Ресурсов по hash
@@ -63,24 +88,18 @@
 			
 			$db->setQuery($query);
 			
-			//			echo 'Query Dump :'.__FILE__ .' Line:'.__LINE__  .$query->dump() ;
+			// echo 'Query Dump :'.__FILE__ .' Line:'.__LINE__  .$query->dump() ;
 			$Items = $db->loadObjectList('hash') ;
+			
+			
 			
 			if( $Merge )
 			{
 				$ItemsMerge = array_merge( (array)$Merge , $Items ) ;
-				/*echo'<pre>';print_r( $t );echo'</pre>'.__FILE__.' '.__LINE__;
-				echo'<pre>';print_r( $Merge );echo'</pre>'.__FILE__.' '.__LINE__;
-				die(__FILE__ .' '. __LINE__ );*/
 				return $ItemsMerge;
 			}#END IF
-			
-			
 			return $Items ;
 		}
-		
-		
-		
 		
 		/**
 		 * Добавить в справочник Assets(ресурсы) новые найденные данные

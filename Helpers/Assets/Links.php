@@ -10,7 +10,7 @@
 	/**
 	 * Class Links - ОБЩИЙ Обработчик ссылок
 	 * @since 3.9
-	 *@package Plg\Pro_critical\Helpers\Assets
+	 * @package Plg\Pro_critical\Helpers\Assets
 	 */
 	class Links extends Assets
 	{
@@ -68,8 +68,8 @@
 			return true;
 		}
 		
-		
 		/**
+		 * Получить медиаверсию
 		 * @param   string
 		 * @since 3.9
 		 */
@@ -134,11 +134,8 @@
 		 * @return mixed
 		 * @since 3.9
 		 */
-		public static function prepareLinkData ( $Link , $type = 'css' ){
+		public static function prepareLinkData ( $Link , $type = 'css' , $onlyLink = false ){
 			$href = $Link->file   ;
-			
-			
-			
 			# Переопределение
 			if ( isset( $Link->override ) && !empty( $Link->override_file ) && $Link->override   )
 				$href = $Link->override_file ; #END IF
@@ -155,16 +152,17 @@
 			if ( isset($Link->delayed_loading)  && $Link->delayed_loading) {
 			
 			} #END IF
-			
-			
 			$MediaVersion = self::getMediaVersion()  ;
 			# id Revision
 			if( isset( $Link->ver_type ) && $Link->ver_type && !empty( $Link->revision_id ) )
 			{
 				$href .= '?i=' . $Link->revision_id;
 			}else{
+				#TODO Добавить проверку на внешний файл - не должно быть версии
 				$href .= '?i=' . $MediaVersion ;
 			}#END IF
+			
+			
 			
 			if ( isset($Link->params_query) && $Link->params_query ) {
 				
@@ -183,13 +181,7 @@
 				}#END FOREACH
 				
 				$href .= ( !empty($queryStr) ? '&' . $queryStr : null ) ;
-				
 			}
-			
-			
-			
-			
-			
 			
 			switch($type){
 				case 'js' :
@@ -202,7 +194,7 @@
 			# Если с прелоадером
 			if ($Link->preload) self::setPreload($Link , $type);
 			
-			return true ;
+			return $Link ;
 		}
 		
 		/**
@@ -240,9 +232,6 @@
 		 */
 		public static function setPreload ( $preload , $typeLink, $typeDefault = 'preload'  )
 		{
-			
-		 
-			
 			if (isset($preload->src)) {
 				$url   = $preload->src ;
 			}elseif (isset($preload->url )){
@@ -255,26 +244,14 @@
 			
 			#Проверка на кроссдоменн
 			$preconnect['crossorigin'] =    self::checkCrossorigin( $url   )   ;
-			
-			
 			$pUrl = parse_url($url) ;
-			
-			
-			
 			if (isset($pUrl['path'])){
-				
 				$info = new \SplFileInfo( $pUrl['path']  );
-				
 			}else{
 				$info = new \SplFileInfo( $url  );
-				
 			}
-			
 			// Получаем расшерение
 			$Ext = $info->getExtension();
-			
-			
-			
 			
 			switch ($Ext){
 				case 'js':
@@ -301,10 +278,6 @@
 			
 			
 			self::$Preload[$url] =    $preconnect  ;
-			
-			
-			
-			
 		}#END FN
 		
 		/**
@@ -345,6 +318,7 @@
 				'file' => null ,
 				'no_external' => false ,
 				'err' => [] ,
+				'err_code' => [] ,
 				'protocol' => [] ,
 				
 				'absolute_path' => false ,
@@ -359,11 +333,13 @@
 			if( preg_match( '/\s/' , $href ) )
 			{
 				$log[ 'err' ][] = 'В ссылке присутствую пробелы это може привести к ошибкам';
+				$log[ 'err_code' ][] = 1000 ;
 			}#END IF
 			
 			if( preg_match( "/[а-яё]+/iu" , $href ) )
 			{
 				$log[ 'err' ][] = 'В ссылке присутствую русские буквы.';
+				$log[ 'err_code' ][] = 1001 ;
 			}
 			
 			$protocol             = parse_url( $href );
@@ -376,6 +352,7 @@
 				if( !$isLocalHost )
 				{
 					$log[ 'err' ][] = 'Отсутствует протокол (scheme) в адресе';
+					$log[ 'err_code' ][] = 1002 ;
 				}#END IF
 			}
 			else if( stristr( $protocol[ 'scheme' ] , 'http' ) )
@@ -389,6 +366,7 @@
 						if( $force_ssl == 2 )
 						{
 							$log[ 'err' ][] = 'Протокол ссылки без SSL! но этот сайт с SSL';
+							$log[ 'err_code' ][] = 1003 ;
 						}#END IF
 						
 					}
@@ -398,6 +376,7 @@
 						if( $force_ssl == 2 )
 						{
 							$log[ 'err' ][] = 'Протокол ссылки без SSL! Протокол сайта с SSL. Это приведет к ошибкам при загрузки данного ресурса.';
+							$log[ 'err_code' ][] = 1004 ;
 						}#END IF
 					}#END IF
 				}
@@ -405,6 +384,7 @@
 			else
 			{
 				$log[ 'err' ][] = 'Тип протокола не определен';
+				$log[ 'err_code' ][] = 1005 ;
 			}#END IF
 			
 			# Проверить домен
@@ -414,6 +394,7 @@
 				if( $protocolSite['host'] == $protocol['host'] )
 				{
 					$log[ 'err' ][] = 'Для локальной ссылки указан абсолютный путь';
+					$log[ 'err_code' ][] = 1006 ;
 					$log['absolute_path'] = true ;
 				}#END IF
 			}#END IF
@@ -424,6 +405,7 @@
 			if( stristr( $protocol[ 'path' ] , '//' ) )
 			{
 				$log[ 'err' ][] = 'Путь содержит два слеша после домена';
+				$log[ 'err_code' ][] = 1007 ;
 				$copyPath       = preg_replace( '/^\/\//' , '/' , $protocol[ 'path' ] );
 				$href           = str_replace( '/' . $copyPath , $copyPath , $href );
 				
@@ -434,6 +416,7 @@
 				if( !stristr( $protocol[ 'host' ] , '.' ) && $isLocalHost && preg_match( '/^\/\//' , $href ) )
 				{
 					$log[ 'err' ][] = 'Ошибка в адресе локального файла. Два слеша в начале относительного пути';
+					$log[ 'err_code' ][] = 1008 ;
 					$href           = '/' . $protocol[ 'host' ] . $protocol[ 'path' ];
 				}#END IF
 			}

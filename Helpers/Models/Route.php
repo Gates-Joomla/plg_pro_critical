@@ -14,7 +14,7 @@
 	use Joomla\CMS\Factory as JFactory;
 	
 	/**
-	 * Работа с моделями каопонента
+	 * Работа с моделями компонента
 	 * Сохранение - Удаление
 	 * @since       version
 	 * @package     Plg\Pro_critical\Models

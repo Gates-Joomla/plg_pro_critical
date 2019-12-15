@@ -94,7 +94,6 @@
 				switch($itemArr['code']){
 					case '101':
 						$url = self::findSchemeToUrl($url) ;
-						
 						break ;
 					default:
 						$mes = 'Plg\Pro_critical\Helper_site::correctionExternalAddress() - Неизвестный код ошибки' ;
@@ -118,8 +117,6 @@
 			{
 				$request_url = self::correctionExternalAddress($checkUrl['err'] ,$request_url ) ;
 			}#END IF
-			
-			
 			
 			$curl_handle = curl_init();
 			curl_setopt($curl_handle, CURLOPT_URL, $request_url);

@@ -82,9 +82,8 @@
 			$this->paramsComponent->set('plugin_param' , $this->params ) ;
 			JLoader::register( 'Pro_criticalHelper', JPATH_ADMINISTRATOR . '/components/com_pro_critical/helpers/pro_critical.php' );
 			JLoader::registerNamespace('Plg\Pro_critical\Helpers\Assets',JPATH_PLUGINS.'/system/pro_critical/Helpers/Assets',$reset=false,$prepend=false,$type='psr4');
-			JLoader::registerNamespace( 'Com_pro_critical\Helpers' ,
-				JPATH_ADMINISTRATOR . '/components/com_pro_critical/com_pro_critical/helpers' ,
-				$reset = false , $prepend = false , $type = 'psr4' );
+			JLoader::registerNamespace( 'Com_pro_critical\Helpers' , JPATH_ADMINISTRATOR . '/components/com_pro_critical/com_pro_critical/helpers' , $reset = false , $prepend = false , $type = 'psr4' );
+			
 			
 			
 			
@@ -121,6 +120,8 @@
 			$doc = JFactory::getDocument();
 			
 			
+			
+			
 			$DefaultLanguage = \Plg\Pro_critical\Helper_site::getDefaultLanguage();
 			$languages = \JLanguageHelper::getLanguages('lang_code');
 			$doc->addScriptOptions('langSef'  , $languages[$DefaultLanguage]->sef ) ;
@@ -150,16 +151,10 @@
 			$doc->addScriptOptions('siteUrl'  , JUri::root() ) ;
 			$doc->addScriptOptions('isClient'  , $this->app->isClient( 'administrator' )  ) ;
 			$doc->addScriptOptions('csrf.token'  , JSession::getFormToken()  ) ;
-//			$doc->addScriptOptions('csrf.token'  , JSession::getFormToken()  ) ;
+
 			
 			
-			# Только для FRONT
-			if( !$this->app->isClient( 'administrator' ) ){
-				# Получить Id компонента в справочнике компонентов com Pro Critical
-				$Component = \Plg\Pro_critical\Components\Component::instance();
-				$option_id = $Component->getOptionId();
-				$view_id = $Component->getViewId();
-			}
+			
 		 
 			
 			
@@ -185,7 +180,20 @@
 		 */
 		public function AfterRender(){
 			
+			
+			
+			$Component = \Plg\Pro_critical\Components\Component::instance();
 			$HelpersCss = Helpers\Assets\Css::instance();
+			$CriticalCss = \Plg\Pro_critical\Helpers\Assets\CriticalCss::instance();
+			$url = \Plg\Pro_critical\Components\Url::instance()->getId() ;
+			
+			$option_id = $Component->getOptionId();
+			$view_id   = $Component->getViewId();
+			$idCriticalCss = $CriticalCss->getCriticalCss();
+			
+			
+			
+			
 			
 			try
 			{
@@ -195,6 +203,9 @@
 				
 				# Установить в HTML ссылки на Css файлы и стили
 				$HelpersCss->insertStylesIntoDocument();
+				
+				
+				
 			}
 			catch( Exception $e )
 			{
@@ -233,6 +244,7 @@
 			Helpers\Assets\Links::setPreconectLinks();
 			
 			
+			$CriticalCss::ifUpdate();
 		}
 		
 		/**
@@ -241,6 +253,7 @@
 		 * @since version
 		 */
 		public function onAjax(){
+			
 			
 			# Проверить Token
 			if(!JSession::checkToken('get')) exit('Err check Token');
@@ -256,7 +269,11 @@
 			$inputTask = $this->app->input->get('task' , false , 'STRING' );
 			
 			$model = '\Plg\Pro_critical'.$dataModel ;
+			
+			
 			$obj = new $model();
+			
+			
 			
 			$res = $obj->{$inputTask}();
 			

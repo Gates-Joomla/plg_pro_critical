@@ -27,11 +27,40 @@
 	{
 		private $app;
 		public static $instance;
-		
+		/**
+		 * Используется для сбора статистики
+		 * TODO - Пока не используется
+		 * @var array
+		 * @since 3.9
+		 */
 		public $statistics = [];
-		
+		/**
+		 * Массив с файлами для установки
+		 * @var array
+		 * @since 3.9
+		 */
 		public $cssFileData;
+		/**
+		 * Массив с css стилями для установки
+		 * @var array
+		 * @since 3.9
+		 */
 		public $cssStyleData;
+		/**
+		 * Массив ID файлов которы установлены на страницы
+		 * Исключаются файлы с отложеной загрузкой
+		 * Будет пустым если хотябы один файл установлен без ID (т.е только что обнаружен)
+		 * @since 3.9
+		 * @var array
+		 *
+		 */
+		public static $LinkHistory = [] ;
+		/**
+		 * индикатор - Не запускать создание критических стилей
+		 * @var bool
+		 * @since 3.9
+		 */
+		public static $StopForCritical = false ;
 		/**
 		 * Имя компонента для вызова модели
 		 * @since 3.9
@@ -39,10 +68,6 @@
 		 */
 		private static $component = 'pro_critical';
 		private static $prefix = 'pro_critical' . 'Model';
-		
-		
-//		private $Css_file_list;
-		
 		
 		/**
 		 * helper constructor.
@@ -91,7 +116,7 @@
 		public function getFileList ()
 		{
 			$app = JFactory::getApplication();
-			$Links_assets = \Plg\Pro_critical\Helpers\Assets\Links_assets ::instance() ;
+			
 			
 			# Загрузить все данные из справочника CSS FILE
 //			$app->input->set( 'limit' , 0 ); // Снять лимит на количество записей DEF - 20
@@ -118,10 +143,6 @@
 						$attr    = $dom::getAttrElement( $node , [ 'rel' ] );
 						$hash = md5( $attr[ 'href' ] ) ;
 						$hashArrLink[] = $hash ;
-						
-						
-						
-						
 						
 						$hrefArr = explode( '?' , $attr[ 'href' ] );
 						
@@ -169,29 +190,16 @@
 			$body = $dom->saveHTML();
 			$this->app->setBody( $body );
 			
-			
-			
-			
 			# Объеденить с данными из базы модели
 			$this->cssFileData = self::getItemsByHash( $hashArrLink , 'css_file' , $link ) ;
-			
-			
-			
 			# Добавить в справочник новые найденные файлы
 			self::addNewLink( $this->cssFileData , 'css_file' );
-			
-			
 			# Объеденить с данными из базы модели css_style
 			$this->cssStyleData = self::getItemsByHash( $hashArr , 'css_style' , $styleTag ) ;
-			
 			# Добавить в справочник новые найденные css_style
 			self::addNewLink( $this->cssStyleData , 'css_style' );
 			
 		}
-		
-		
-		public static $cssFileDataDelayed ;
-		
 		
 		/**
 		 * Установить в HTML ссылки на Css файлы и стили
@@ -200,26 +208,9 @@
 		 * @since version
 		 */
 		public function insertStylesIntoDocument(){
-			
-			
-			
-			$ParamsComponent = self::getParamsComponent();
+			// $ParamsComponent = self::getParamsComponent();
 			$dom_params = [] ;
-			
-			
-			
-			/*if( isset($ParamsComponent['css_link_load_method']) && $ParamsComponent['css_link_load_method'] )
-			{
-				$dom_params['formatOutput'] = true;
-			}#END IF*/
-			
 			$dom = new \GNZ11\Document\Dom();
-			
-			# Подключить Helper для работы со сылками
-			$Links_assets = \Plg\Pro_critical\Helpers\Assets\Links_assets ::instance() ;
-			
-			# массив для HTML элементов
-			$tagsArr = [] ;
 			
 			
 			foreach( $this->cssFileData as $url => $Link )
@@ -229,18 +220,36 @@
 				
 				# TODO LOAD:CSS - Add the ability to load CSS files as a Style tag.
 				$Linkcopy = $Link ;
-				unset($Linkcopy->id);
+				$LinkcopyId = null ;
+				if( isset( $Linkcopy->id  ) )
+				{
+					# Копируем ID для добавления а историю в случае добавления
+					$LinkcopyId = $Linkcopy->id ;
+					unset($Linkcopy->id);
+				}else{
+					# Установить индикатор - Не запускать создание критических стилей
+					self::$StopForCritical = true ;
+				}#END IF
+				
 				$Linkcopy->rel="stylesheet";
 				
 				# Подготовить ссылку к загрузи - определить параметры ссылки
-				$LinkData = \Plg\Pro_critical\Helpers\Assets\Css\Link::prepareLinkCssData( $Linkcopy );
+				\Plg\Pro_critical\Helpers\Assets\Css\Link::prepareLinkCssData( $Linkcopy );
 				
-				
-				
-				# установить ссылку вниз Tag Head
-				$dom::writeBottomHeadTag('link' , null , $Linkcopy , $dom_params );
-				
+				# Проверяем на отложеную загрузку
+				if( !$Linkcopy->delayed_loading )
+				{
+					self::$LinkHistory[] = $LinkcopyId ;
+					# установить ссылку вниз Tag Head
+					$dom::writeBottomHeadTag('link' , null , $Linkcopy , $dom_params );
+				}#END IF
 			}#END FOREACH
+			
+			# Очистить историю установленых файлов
+			if(  self::$StopForCritical   )
+			{
+				self::$LinkHistory = [] ;
+			}#END IF
 			
 			# Установка тегов стилей в документ
 			\Plg\Pro_critical\Helpers\Assets\Css\Style::setStyleTag( $this->cssStyleData );
