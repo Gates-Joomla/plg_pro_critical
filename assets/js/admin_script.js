@@ -3,13 +3,21 @@
 PlgProCritical.Options = Joomla.getOptions('PlgProCritical') ;
 
 PlgProCritical.Init = function(){
-    var viewArr = ['css_file', 'css_style'] ;
-    var view = PlgProCritical.Options.view
+    var viewArr = ['css_file', 'css_style' , 'js_file' , 'js_style' ] ;
+    var view = PlgProCritical.Options.view ;
 
     if ( viewArr.indexOf( view ) === -1 ) return ;
     var init =  PlgProCritical[view+'_Init'] ;
     init();
 };
+PlgProCritical.js_file_Init = function(){
+    PlgProCritical.css_file_Init();
+};
+PlgProCritical.js_style_Init = function(){
+    PlgProCritical.css_style_Init();
+};
+
+
 PlgProCritical.css_style_Init = function(){
     var $ = jQuery ;
     var $Input_s= $('[name*="[file]"],[name*="[minify_file]"],[name*="[override_file]"]');
@@ -19,7 +27,7 @@ PlgProCritical.css_style_Init = function(){
 };
 
 PlgProCritical.css_file_Init = function(){
-   console.trace()
+   console.trace();
 
     var $ = jQuery ;
     var $Input_s= $('[name*="[file]"],[name*="[minify_file]"],[name*="[override_file]"]');

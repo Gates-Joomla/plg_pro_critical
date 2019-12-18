@@ -17,6 +17,8 @@
 	use JDate;
 	use Joomla\CMS\Uri\Uri;
 	use Throwable;
+	use Joomla\CMS\Component\ComponentHelper;
+	use Plg\Pro_critical\Helpers\Assets\Css\Script as CssScript;
 	
 	/**
 	 * @since       version
@@ -61,6 +63,15 @@
 		 * @since 3.9
 		 */
 		public static $StopForCritical = false ;
+		/**
+		 * @var bool Индикатор - Критические стили созданы
+		 * @since 3.9
+		 */
+		public static $UseCritical = false ;
+		/**
+		 * @var array Стэк для сохранения ссылок и стилей при созданных Critical
+		 */
+		public static $StackStyle = [] ;
 		/**
 		 * Имя компонента для вызова модели
 		 * @since 3.9
@@ -115,13 +126,9 @@
 		 */
 		public function getFileList ()
 		{
-			$app = JFactory::getApplication();
-			
-			
 			# Загрузить все данные из справочника CSS FILE
 //			$app->input->set( 'limit' , 0 ); // Снять лимит на количество записей DEF - 20
 //			$Css_file_list = $this->Css_file_list->getItems();
-			
 			
 			$body = $this->app->getBody();
 			
@@ -212,44 +219,29 @@
 			$dom_params = [] ;
 			$dom = new \GNZ11\Document\Dom();
 			
+			$CriticalCss = \Plg\Pro_critical\Helpers\Assets\CriticalCss::instance();
+			$CriticalArr = $CriticalCss->getCriticalCss() ;
 			
-			foreach( $this->cssFileData as $url => $Link )
+//			echo'<pre>';print_r( $CriticalArr );echo'</pre>'.__FILE__.' '.__LINE__;
+//			die(__FILE__ .' '. __LINE__ );
+			
+			if( $CriticalArr['critical_css_code'] )
 			{
-				if( isset($Link->load)  &&  !$Link->load  ) continue ; #END IF
+				# Установить индикатор о том что есть критичиские стили
+				self::$UseCritical = true ;
+				# установить ссылку вниз Tag <head>
+				$dom::writeBottomHeadTag( 'style' , $CriticalArr['critical_css_code']  );
 				
-				
-				# TODO LOAD:CSS - Add the ability to load CSS files as a Style tag.
-				$Linkcopy = $Link ;
-				$LinkcopyId = null ;
-				if( isset( $Linkcopy->id  ) )
-				{
-					# Копируем ID для добавления а историю в случае добавления
-					$LinkcopyId = $Linkcopy->id ;
-					unset($Linkcopy->id);
-				}else{
-					# Установить индикатор - Не запускать создание критических стилей
-					self::$StopForCritical = true ;
-				}#END IF
-				
-				$Linkcopy->rel="stylesheet";
-				
-				# Подготовить ссылку к загрузи - определить параметры ссылки
-				\Plg\Pro_critical\Helpers\Assets\Css\Link::prepareLinkCssData( $Linkcopy );
-				
-				# Проверяем на отложеную загрузку
-				if( !$Linkcopy->delayed_loading )
-				{
-					self::$LinkHistory[] = $LinkcopyId ;
-					# установить ссылку вниз Tag Head
-					$dom::writeBottomHeadTag('link' , null , $Linkcopy , $dom_params );
-				}#END IF
-			}#END FOREACH
+			}#END IF
+			
+			# Установить ссылки на Css файлы в тело документа
+ 		    $this->setLinkTag();
+			
+			 
 			
 			# Очистить историю установленых файлов
-			if(  self::$StopForCritical   )
-			{
-				self::$LinkHistory = [] ;
-			}#END IF
+			# если обнаружен файл которого нет в справочнике Css Стилей
+			if(  self::$StopForCritical   ) self::$LinkHistory = [] ; #END IF
 			
 			# Установка тегов стилей в документ
 			\Plg\Pro_critical\Helpers\Assets\Css\Style::setStyleTag( $this->cssStyleData );
@@ -257,10 +249,88 @@
 			
 		}
 		
+		/**
+		 * Установить ссылки на Css файлы в тело  документа
+		 *
+		 * @throws Exception
+		 * @since 3.9
+		 */
+		protected function setLinkTag ()
+		{
+			$dom_params = [] ;
+			$dom = new \GNZ11\Document\Dom();
+			foreach( $this->cssFileData as $url => $Link )
+			{
+				if( isset( $Link->load ) && !$Link->load ) continue; #END IF
+				
+				# TODO LOAD:CSS - Add the ability to load CSS files as a Style tag.
+				$Linkcopy      = $Link;
+				$Linkcopy->rel = "stylesheet";
+				
+				$LinkCopy_Id = null;
+				# Если файл есть в справочнике Css Стилей
+				if( isset( $Linkcopy->id ) )
+				{
+					# Копируем ID для добавления а историю если будут создаваться критические стили
+					$LinkCopy_Id = $Linkcopy->id;
+					unset( $Linkcopy->id );
+				}
+				else
+				{
+					# Установить индикатор - Не запускать создание критических стилей
+					self::$StopForCritical = true;
+				}#END IF
+				
+				# Подготовить ссылку к загрузи - определить параметры ссылки
+				\Plg\Pro_critical\Helpers\Assets\Css\Link::prepareLinkCssData( $Linkcopy );
+				
+				# Проверяем на отложеную загрузку
+				if( !$Linkcopy->delayed_loading )
+				{
+					self::$LinkHistory[] = $LinkCopy_Id;
+					
+					# Если критичиские стили не созданы
+					if( !self::$UseCritical )
+					{
+						# установить ссылку вниз Tag Head
+						$dom::writeBottomHeadTag( 'link' , null , $Linkcopy , $dom_params );
+					}else{
+						self::$StackStyle['link'][] = $Linkcopy ;
+						
+						// $dom::writeDownTag ( 'link' , null , $Linkcopy  ) ;
+					}#END IF
+					
+				}#END IF
+			}#END FOREACH
+		}#END FN
 		
-		
-		
-		
+		/**
+		 * Установка CSS Стилей Если созданы критические стили
+		 * @throws Exception
+		 * @since 3.9
+		 */
+		public function insertCssAfterLoad(){
+			if( !self::$UseCritical ) return ; #END IF
+			$dom = new \GNZ11\Document\Dom();
+			$params = ComponentHelper::getParams( 'com_pro_critical' , $strict = false );
+			$css_loading_method = $params->get('css_loading_method' , 1 ) ;
+			# Если включен способ загрузки ссылки на CSS в низу страницы
+			if(  !$css_loading_method )
+			{
+				foreach( self::$StackStyle['link'] as $LinkCopy )
+				{
+					# Создать тэг перед </body>
+					$dom::writeDownTag ( 'link' , null , $LinkCopy  ) ;
+				}#END FOREACH
+				return ;
+			}#END IF
+			# Если включен способ загрузки ссылки на CSS Загружает JS
+			CssScript::addCssAfterLoadPage(self::$StackStyle);
+			
+			
+//			echo'<pre>';print_r( self::$UseCritical );echo'</pre>'.__FILE__.' '.__LINE__;
+//			die(__FILE__ .' '. __LINE__ );
+		}
 		
 		
 		

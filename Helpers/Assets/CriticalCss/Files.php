@@ -4,10 +4,18 @@
 	namespace Plg\Pro_critical\Helpers\Assets\CriticalCss;
 	
 	
+	use Joomla\CMS\Filesystem\File;
+	
 	class Files
 	{
 		
 		private $Links ;
+		/**
+		 * @var string текущий путь к файлу
+		 *             используется в обработке ошибок
+		 * @since 3.9
+		 */
+		private static $cerentHref ;
 		
 		/**
 		 * Files constructor.
@@ -20,6 +28,7 @@
 		}
 		
 		/**
+		 * читаем все файлы
 		 * @param $arrFiles
 		 *
 		 * @return mixed
@@ -28,9 +37,6 @@
 		 */
 		public function addContentFile ( $arrFiles )
 		{
-			
-			
-			
 			foreach( $arrFiles as $i => $arrFile )
 			{
 				$arrFiles[$i]->content = $this->getFileContent ( $arrFile );
@@ -38,13 +44,6 @@
 			
 			return $arrFiles ;
 		}
-		
-		/**
-		 * @var string текущий путь к файлу
-		 *             используется в обработке ошибок
-		 * @since 3.9
-		 */
-		private static $cerentHref ;
 		
 		/**
 		 * Прочитать файл
@@ -96,6 +95,22 @@
 			die(__FILE__ .' '. __LINE__ );
 		}
 		
+		/**
+		 * Удалить все файлы AllCss Из директории кэша
+		 * @return int - Количество удаленных файлов
+		 * @since 3.9
+		 */
+		public static function clearCacheFiles(){
+			# Путь к директории кэша
+			$Dir = \Plg\Pro_critical\Helpers\Assets\CriticalCss\Api::$allCssDir ;
+			$i_count = 0 ;
+			foreach (glob($Dir."/*.css") as $AllCssFile) {
+				# Удалить файл AllCSS
+				File::delete($AllCssFile);
+				$i_count++;
+			}
+			return $i_count ;
+		}
 		
 	}
 	

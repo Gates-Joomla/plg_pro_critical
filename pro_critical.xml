@@ -18,11 +18,12 @@
 
 	<!-- [Interpretation 16439] Plugin files -->
 	<files>
-		<filename plugin="pro_critical">pro_critical.php</filename>
-		<filename>index.html</filename>
-		<folder>language</folder>
-		<folder>Helpers</folder>
 		<folder>assets</folder>
+		<folder>cache</folder>
+		<folder>Helpers</folder>
+		<folder>language</folder>
+		<filename>index.html</filename>
+		<filename plugin="pro_critical">pro_critical.php</filename>
 	</files>
 
 	<!-- [Interpretation 16526] Update servers -->

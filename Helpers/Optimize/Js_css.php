@@ -37,6 +37,7 @@
 		
 		/**
 		 * Js_css constructor.
+		 * @throws Exception
 		 * @since 3.9
 		 */
 		public function __construct ()
@@ -71,34 +72,22 @@
 		 */
 		public function minify()
 		{
-			
 			$form = $this->app->input->get( 'data' , false , 'RAW' );
-			
-			
-			
 			if( !$form )
 			{
 				$arr = $this->app->input->get( 'data' , [] , 'ARRAY' );
-				echo '<pre>';
-				print_r( $arr );
-				echo '</pre>' . __FILE__ . ' ' . __LINE__;
+				echo '<pre>'; print_r( $arr ); echo '</pre>' . __FILE__ . ' ' . __LINE__;
 				die( __FILE__ . ' ' . __LINE__ );
 			}#END IF
 			parse_str( $form , $output );
 			
 			
 			
-			
 			# Если передается не форма а строка с ссылкой на файл
 			if( !isset( $output[ 'jform' ] ) )
 			{
-				
-				
 				$file = $form;
 				$Ext  = JFile::getExt( $form );
-				
-				
-				
 				if( $Ext == 'css' )
 				{
 					$urlApi = self::$cssUrl;
@@ -123,13 +112,9 @@
 				
 			}#END IF
 			
+			
+			
 			$model = ( explode( '.' , $output[ 'task' ] ) )[ 0 ];
-			
-			
-			
-			
-			
-			
 			$jform = $output[ 'jform' ];
 			
 			
@@ -144,7 +129,7 @@
 				
 			}#END IF
 			
-			if( $model == 'css_style' )
+			if( $model == 'css_style' || $model == 'js_style' )
 			{
 				$Model = JModelLegacy::getInstance( $model , self::$prefix );
 			}#END IF
@@ -160,6 +145,7 @@
 					$urlApi = self::$cssUrl;
 					
 					break;
+				case 'js_style':
 				case 'js_file':
 					$urlApi = self::$javascriptUrl;
 					
@@ -169,7 +155,9 @@
 					throw new Exception( $mes , 500 );
 			}
 			
-			if( $model == 'css_style' )
+			//
+			
+			if( $model == 'css_style' || $model == 'js_style' )
 			{
 				$GNZ11_Js_css = new \GNZ11\Api\Optimize\Js_css();
 				$data         = $GNZ11_Js_css->Minified( $urlApi , $jform['content'] );
@@ -280,6 +268,7 @@
 					break;
 					
 				case 'css_style':
+				case 'js_style':
 					
 					$jform['content_min'] = false ;
 					if( !$Model->save( $jform ) )

@@ -14,15 +14,13 @@
 	 */
 	class Links extends Assets
 	{
-		
+		public static $instance;
 		public static $Preload ;
 		/**
-		 * @var string
+		 * @var string Медиа версия для файлов по умлчанию
 		 * @since 3.9
 		 */
 		public static $MediaVersion;
-		
-		public static $instance;
 		/**
 		 * helper constructor.
 		 * @throws Exception
@@ -80,6 +78,7 @@
 		}
 		
 		/**
+		 * Getter Media Version
 		 * @return string
 		 * @since 3.9
 		 */

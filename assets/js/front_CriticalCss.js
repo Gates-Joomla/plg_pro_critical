@@ -1,6 +1,29 @@
 (function () {
 
+    var script = document.createElement('script');
+    script.src = '/plugins/system/pro_critical/assets/js/front_CssAfterLoad.js';
+    document.head.appendChild(script);
 
+
+    /*
+
+    var script = document.createElement('script');
+    script.onload = function () {
+        //do stuff with the script
+
+    };
+    script.src = something;
+    document.head.appendChild(script);
+
+    */
+
+    // Create new link Element
+    /*
+    var link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.type = 'text/css';
+    link.href = 'style.css';
+    document.getElementsByTagName('HEAD')[0].appendChild(link);*/
 
     var CriticalStart = function () {
         var $ = jQuery ;
@@ -18,7 +41,7 @@
         AjaxParam.data =   $('script#CriticalCss').text()   ;
         gnz11.getAjax().then(function (Ajax) {
             Ajax.send(AjaxParam).then(function (res) {
-                console.clear();
+
                 console.log( res )
             },function (err) {
                 console.log(err) ;
@@ -29,7 +52,7 @@
 
 
     setTimeout(function () {
-        console.clear();
+
         CriticalStart()
     } , 2000);
 

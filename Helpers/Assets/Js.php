@@ -46,12 +46,11 @@
 			{
 				self::$instance = new self( $options );
 			}
-			
 			return self::$instance;
 		}#END FN
 		
 		/**
-		 * Извлечь из страницы в скриты и ссылки на Js файлы
+		 * Извлечь из страницы все скриты и ссылки на Js файлы
 		 * добавить новые найденые в справочники
 		 * @since 3.9
 		 */
@@ -100,24 +99,29 @@
 					
 					
 					unset( $link[ $hash ]->src );
-					
 				}
 				else
 				{
+					
 					
 					
 					$hash      = md5( $node->nodeValue );
 					$hashArr[] = $hash;
 					
 					$Registry = new \Joomla\Registry\Registry;
+					if( isset($attr['type']) )
+					{
+						$Registry->set( 'type' , $attr['type'] );
+						unset($attr['type']);
+					}#END IF
+					
+					
 					$Registry->set( 'load' , 1 );
 					$Registry->set( 'hash' , $hash );
 					$Registry->set( 'content' , $node->nodeValue );
-					
-					
 					$subFormDataJson = self::getSubFormLinksData( 'params_query' , $attr );
 					$Registry->set( 'params_query' , $subFormDataJson );
-					
+	
 					$scriptTag[ $hash ] = $Registry->toObject();
 				}#END IF
 				
@@ -125,6 +129,8 @@
 				# Удалить найденый узел
 				$node->parentNode->removeChild( $node );
 			}#end FOREACH
+			
+			
 			
 			$body = $dom->saveHTML();
 			$this->app->setBody( $body );
@@ -135,12 +141,27 @@
 			# Добавить в справочник новые найденные файлы
 			self::addNewLink( $this->jsFileData , 'js_file' );
 			
-			
 			# Объеденить с данными из базы модели js_style
 			$this->scriptTagData = self::getItemsByHash( $hashArr , 'js_style' , $scriptTag );
 			
 			# Добавить в справочник новые найденные js_style
 			self::addNewLink( $this->scriptTagData , 'js_style' );
+		}
+		
+		/**
+		 * Проверка на сжатый контент в скрипте
+		 * @param $scriptObj - объект Js Script
+		 *
+		 * @return string - Контент JS Script
+		 * @since 3.9
+		 */
+		private function checkContentMin($scriptObj){
+			
+			if( empty( $scriptObj->content_min ) )
+			{
+				return $scriptObj->content;
+			}#END IF
+			return $scriptObj->content_min;
 		}
 		
 		/**
@@ -151,16 +172,33 @@
 		public function insertJsSctiptIntoDocument ()
 		{
 			$dom = new \GNZ11\Document\Dom();
-			foreach( $this->scriptTagData as $url => $Link )
+			
+			# Для обычных Скриптов
+			$is_script_plain = null ;
+			
+			foreach( $this->scriptTagData as $scriptTagDatum )
 			{
-				if( isset( $Link->load ) && !$Link->load ) continue; #END IF
-				unset( $Link->id );
-				$Link = self::mergeSubFormLinksParams( 'params_query' , $Link );
+				if( isset( $scriptTagDatum->load ) && !$scriptTagDatum->load ) continue; #END IF
+				$content = $this->checkContentMin($scriptTagDatum);
 				
+				if( empty( $scriptTagDatum->type ) && empty( $scriptTagDatum->params_query ) )
+				{
+					# Обычные скрипты
+					$is_script_plain .= $content ;
+					continue ;
+				}elseif( !empty( $scriptTagDatum->type ) || !empty( $scriptTagDatum->params_query )  ){
+					
+					unset( $scriptTagDatum->id );
+					$scriptTagDatum = self::mergeSubFormLinksParams( 'params_query' , $scriptTagDatum );
+					# Добавить тег Scrip Js в тело документа перед закрывающемся тегом </body>
+					$dom::writeDownTag( 'script' , $content , $scriptTagDatum );
+					
+					
+				} #END IF
 				
-				# Добавить тег Scrip Js в тело документа перед закрывающемся тегом </body>
-				$dom::writeDownTag( 'script' , $Link->content , $Link );
-			}
+			}#END FOREACH
+			
+			$dom::writeDownTag( 'script' , $is_script_plain , [] );
 		}
 		
 		

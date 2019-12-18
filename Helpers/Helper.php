@@ -184,14 +184,15 @@
 			
 			$Component = \Plg\Pro_critical\Components\Component::instance();
 			$HelpersCss = Helpers\Assets\Css::instance();
-			$CriticalCss = \Plg\Pro_critical\Helpers\Assets\CriticalCss::instance();
+			
+		    $CriticalCss = \Plg\Pro_critical\Helpers\Assets\CriticalCss::instance();
+		    
 			$url = \Plg\Pro_critical\Components\Url::instance()->getId() ;
 			
 			$option_id = $Component->getOptionId();
 			$view_id   = $Component->getViewId();
-			$idCriticalCss = $CriticalCss->getCriticalCss();
 			
-			
+			$CriticalCssData = $CriticalCss->getCriticalCss();
 			
 			
 			
@@ -203,9 +204,6 @@
 				
 				# Установить в HTML ссылки на Css файлы и стили
 				$HelpersCss->insertStylesIntoDocument();
-				
-				
-				
 			}
 			catch( Exception $e )
 			{
@@ -226,18 +224,18 @@
 			}
 			
 			$HelpersJs = Helpers\Assets\Js::instance();
+			
 			# Извлечь из страницы в скриты и ссылки на Js файлы
 			# добавить новые найденые в справочники
 			$HelpersJs->getListJs();
-			
-			
 			
 			# Установить в HTML ссылки на JS файлы
 			$HelpersJs->insertJsLikIntoDocument();
 			# Установить   JS скрипты в тело документа
 			$HelpersJs->insertJsSctiptIntoDocument();
 			
-			
+			# Установка CSS при созданных критических стилях
+			$HelpersCss->insertCssAfterLoad();
 			
 			# Установка методов предварительной загрузки
 			# preload | prefetch

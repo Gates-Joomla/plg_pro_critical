@@ -63,6 +63,10 @@
 					$type = 'css' ;
 					
 					break ;
+				case 'js_file.edit':
+					$type = 'js';
+					
+					break;
 					
 				default :
 					$this->app->enqueueMessage('Неизвестный тип файла!' , 'error');

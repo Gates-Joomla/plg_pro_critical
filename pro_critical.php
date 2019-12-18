@@ -62,6 +62,7 @@ class PlgSystemPro_critical extends CMSPlugin
 		 */
 		public function __construct ( &$subject , $config )
 		{
+			
 			parent::__construct( $subject , $config );
 			$this->app = JFactory::getApplication();
 			
@@ -196,6 +197,7 @@ class PlgSystemPro_critical extends CMSPlugin
 		 */
 		public function onAjaxPro_critical ()
 		{
+			
 			$this->Helper->onAjax();
 			
 		}

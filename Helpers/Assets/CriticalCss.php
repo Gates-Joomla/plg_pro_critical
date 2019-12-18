@@ -7,19 +7,25 @@
 	
 	use Plg\Pro_critical\Components\Component;
 	use Plg\Pro_critical\Components\Url;
-	use Plg\Pro_critical\Helpers\Assets\CriticalCss\Script;
+	use Plg\Pro_critical\Helpers\Assets\CriticalCss\Script AS CriticalCssScript;
+	use Plg\Pro_critical\Components\Option AS ComponentsOption;
 	
 	class CriticalCss
 	{
 		private $app;
 		public static $instance;
-		private static $CriticalCss ;
+		/**
+		 * @var int - ID текущего Critical Css Object
+		 * @since 3.9
+		 */
+		public static $CurrentCriticalId;
+		private static $CriticalCssData ;
 		private static $Update = false ;
 		/**
 		 * @var int - Таймаут для страницы между созданием критических стилей (секунды)
 		 * @since 3.9
 		 */
-		private static $LockTimeLeft = 1 ;
+		private static $LockTimeLeft = 20 ;
 		
 		/**
 		 * helper constructor.
@@ -57,16 +63,46 @@
 		 * @since 3.9
 		 */
 		public function getCriticalCss(){
-			if( self::$CriticalCss ) return self::$CriticalCss; #END IF
 			
-			
+			if( self::$CriticalCssData ) return self::$CriticalCssData; #END IF
 			# Получить объект CriticalCss
-			if( self::$CriticalCss = $this->getItems() ) return self::$CriticalCss ; #END IF
-			# Создать Новый CriticalCss
-			self::$CriticalCss = $this->addNewCriticalCss();
 			
-			return self::$CriticalCss ;
+			$CriticalCssData = $this->getItems() ;
+			if( !$CriticalCssData )
+			{
+				# Создать Новый CriticalCss
+				$CriticalCssID = $this->addNewCriticalCss();
+				$CriticalCssData = $this->getItems() ;
+			}else{
+				$CriticalCssID = $CriticalCssData ['id'] ;
+			}#END IF
+			
+			self::$CurrentCriticalId = $CriticalCssID ;
+			self::$CriticalCssData = $CriticalCssData ;
+			return self::$CriticalCssData ;
+			
+			/*echo'<pre>';print_r( self::$CurrentCriticalId );echo'</pre>'.__FILE__.' '.__LINE__;
+			echo'<pre>';print_r( self::$CriticalCssData );echo'</pre>'.__FILE__.' '.__LINE__;
+			
+			
+			if( self::$CriticalCssData = $this->getItems() ) {
+				self::$CurrentCriticalId = self::$CriticalCssData['id'] ;
+				return self::$CriticalCssData ;
+			} #END IF
+			
+			# Создать Новый CriticalCss
+			$CriticalCssID = $this->addNewCriticalCss();
+			
+			echo'<pre>';print_r( $CriticalCssID );echo'</pre>'.__FILE__.' '.__LINE__;
+			
+//			self::$CriticalCss = $this->addNewCriticalCss();*/
+			
+			
+		
 		}
+		
+		
+		
 		
 		/**
 		 * Создать Новый CriticalCss
@@ -84,7 +120,7 @@
 			
 			$query = $db->getQuery( true );
 			$query->select( '*' )->from( $db->quoteName( '#__pro_critical_css' ) )->where( $where );
-			// echo $query->dump();
+//			echo $query->dump();
 			$db->setQuery( $query );
 			$res = false ;
 			try
@@ -147,13 +183,18 @@
 		 * @since 3.9
 		 */
 		private function addNewCriticalCss(){
-			$Component = Component::instance();
+			$PNT = $this->app->input->get('pro_critical' , false , INT ) ;
+			if( $PNT ) return #END IF
 			
-			$data['option'] = $Component->getOptionId();
-			$data['view']   = $Component->getViewId();
+			$Component = Component::instance();
+			$Option = ComponentsOption::instance();
+			$View = \Plg\Pro_critical\Components\View::instance() ;
+			$data['option'] = $Option->getOptionId();
+			$data['view']   = $View->getViewId();
 			$data['pro_critical_url_id']   = Url::instance()->getId() ;
 			
-			$data['checked_out']   = true ;
+			# TODO - привязать к администратору
+			$data['checked_out']   = 2727 ;
 			$data['checked_out_time']   = new \JDate('now +'.self::$LockTimeLeft.' seconds');
 			
 			# Подлючене модели
@@ -162,7 +203,8 @@
 			if( $model->save($data) )
 			{
 				self::$Update = true ;
-				return  $model->get('state')->{'css.id'} ;
+				self::$CurrentCriticalId = $model->get('state')->{'css.id'} ;
+				return  self::$CurrentCriticalId ;
 				
 			}else{
 				throw new \Exception('Error! при создании значения в справочнике CriticalCss .');
@@ -171,15 +213,14 @@
 		}
 		
 		/**
-		 * проверить если нужно обновление отправить скриты
+		 * Проверить если нужно обновление отправить скриты
 		 * @throws \Exception
 		 * @since 3.9
 		 */
 		public static function ifUpdate(){
 			if( self::$Update )
 			{
-				
-				Script::add( self::$CriticalCss );
+				CriticalCssScript::add( self::$CriticalCssData );
 			}#END IF
 		
 		}

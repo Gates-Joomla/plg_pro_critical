@@ -61,16 +61,19 @@
 		public function getViewId( $View = null ){
 			if( self::$view_id ) return self::$view_id; #END IF
 			
+			
 			# TODO -разобратся с Router портит каноникал в com_SEF404
 			$uri = \JUri::getInstance( );
 			$router            = $this->app->getRouter();
 			$Router_Data = $router->parse( $uri );
 			
+			unset($Router_Data['pro_critical']) ;
+			
+			
 			$Hash = self::getHashView($Router_Data);
 			
 			# Получить view Id из справочника компонента Pro_critical
 			self::$view_id = Pro_criticalHelper::getVar( 'directory_views' , $Hash , 'hash' );
-			
 			if( self::$view_id ) return self::$view_id ; #END IF
 			
 			# Добавить новое представление

@@ -122,7 +122,8 @@
 				return true;
 			}#END IF
 			
-			$excludeFields=['err','protocol','absolute_path','created',  'created_by',   'published' ];
+			
+			$excludeFields=['err','err_code','protocol','absolute_path','created','created_by','published' ];
 			
 			if( !count( $link ) ) return true;
 			
@@ -183,7 +184,7 @@
 			$query->insert( $db->quoteName( '#__pro_critical_'.$Model ) )->columns( $db->quoteName( $columns ) );
 			$db->setQuery( $query );
 			
-//			echo 'Query Dump :'.__FILE__ .' Line:'.__LINE__  .$query->dump() ;
+// 			echo 'Query Dump :'.__FILE__ .' Line:'.__LINE__  .$query->dump() ;
 			
 			
 			try
