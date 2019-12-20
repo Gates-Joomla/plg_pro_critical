@@ -241,6 +241,9 @@
 			# preload | prefetch
 			Helpers\Assets\Links::setPreconectLinks();
 			
+			#Запуск Задач для Html
+			$HtmlHelperTask = \Plg\Pro_critical\Html\Html::instance();
+			
 			
 			$CriticalCss::ifUpdate();
 		}

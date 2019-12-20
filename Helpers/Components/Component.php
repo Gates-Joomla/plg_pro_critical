@@ -7,7 +7,6 @@
 	use Pro_criticalHelper;
 	use Throwable;
 	
-	
 	class Component
 	{
 		public static $option_id;
@@ -15,7 +14,6 @@
 		private $app;
 		private $Option ;
 		public static $instance;
-		
 		
 		/**
 		 * helper constructor.
@@ -48,11 +46,9 @@
 			return self::$instance;
 		}#END FN
 		
-		
-		
-		
-		
 		/**
+		 * Получить Option ID
+		 *
 		 * @return mixed
 		 * @throws Exception
 		 * @since 3.9
@@ -60,7 +56,6 @@
 		public function getOptionId (){
 			return $this->Option->getOptionId();
 		}
-		
 		
 		/**
 		 * Получить ID view - из справочника * directory_views *
@@ -73,9 +68,6 @@
 		public function getViewId(){
 			
 			return $this->View->getViewId();
-			
-			
-			
 			
 			/*
 			

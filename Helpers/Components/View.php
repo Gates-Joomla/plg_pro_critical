@@ -61,7 +61,6 @@
 		public function getViewId( $View = null ){
 			if( self::$view_id ) return self::$view_id; #END IF
 			
-			
 			# TODO -разобратся с Router портит каноникал в com_SEF404
 			$uri = \JUri::getInstance( );
 			$router            = $this->app->getRouter();

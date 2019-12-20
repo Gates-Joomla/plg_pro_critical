@@ -62,15 +62,15 @@
 			return \Pro_criticalHelper::getVar( 'url' , $current , 'url_page' );
 		}
 		
-		
 		/**
+		 * Добавить текущий URL в справочник URL
 		 * @param   string  $Url
 		 *
 		 * @return int id Url
 		 * @throws \Exception
 		 * @since 3.9
 		 */
-		private static function setUrl (  )
+		private static function setUrl ()
 		{
 			$uri = \JUri::getInstance( );
 			$data['url_page'] =   $uri->current();

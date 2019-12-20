@@ -102,9 +102,6 @@
 				}
 				else
 				{
-					
-					
-					
 					$hash      = md5( $node->nodeValue );
 					$hashArr[] = $hash;
 					
@@ -130,11 +127,8 @@
 				$node->parentNode->removeChild( $node );
 			}#end FOREACH
 			
-			
-			
 			$body = $dom->saveHTML();
 			$this->app->setBody( $body );
-			
 			
 			# Объеденить с данными из базы модели
 			$this->jsFileData = self::getItemsByHash( $hashArrLink , 'js_file' , $link );
@@ -200,9 +194,6 @@
 			
 			$dom::writeDownTag( 'script' , $is_script_plain , [] );
 		}
-		
-		
-		
 		
 		/**
 		 * Установить в HTML ссылки на JS файлы
