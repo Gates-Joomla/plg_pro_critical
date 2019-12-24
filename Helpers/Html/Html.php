@@ -37,6 +37,11 @@
 			$Component = \Plg\Pro_critical\Components\Component::instance();
 			self::$option_id = $Component->getOptionId();
 			self::$view_id   = $Component->getViewId();
+			
+//			echo'<pre>';print_r( self::$option_id );echo'</pre>'.__FILE__.' '.__LINE__;
+//			echo'<pre>';print_r( self::$view_id );echo'</pre>'.__FILE__.' '.__LINE__;
+//			die(__FILE__ .' '. __LINE__ );
+			
 			$TasksArr = $this->getHtmlTask();
 			$sortTaskArr = $this->filterTask( $TasksArr );
 			
@@ -61,34 +66,49 @@
 			return self::$instance;
 		}#END FN
 		
-		private function applyTask($sortTaskArr){
+		private function applyTask($sortTaskArr)
+		{
 			
-			echo'<pre>';print_r( $sortTaskArr );echo'</pre>'.__FILE__.' '.__LINE__;
-			die(__FILE__ .' '. __LINE__ );
 			foreach( $sortTaskArr as $item )
 			{
-				$id_task = $item['type_html_task'] ;
-				switch($id_task){
+				$id_task = $item[ 'type_html_task' ];
+				switch( $id_task )
+				{
 					case 1 :
 						
-						\Plg\Pro_critical\Html\Tasks\Images::aplly($item);
-						break ;
+						try
+						{
+							
+							\Plg\Pro_critical\Html\Tasks\Images::aplly( $item );
+						}
+						catch( \Exception $e )
+						{
+						}
+						break;
 					case 2 :
-						\Plg\Pro_critical\Html\Tasks\Youtube::aplly($item);
-						
-						
+						try
+						{
+							\Plg\Pro_critical\Html\Tasks\Youtube::aplly( $item );
+						}
+						catch( \Exception $e )
+						{
+						}
+						break;
+					case 3 :
+						try
+						{
+							\Plg\Pro_critical\Html\Tasks\Preloader::aplly( $item );
+						}
+						catch( \Exception $e )
+						{
+						}
 						break;
 					case 0 :
-						$aaa = null ;
+						$aaa = null;
 						break;
 				}
-				
-				
-				
-				
-				
 			}#END FOREACH
-			return true ;
+			return true;
 		}
 		
 		/**
@@ -107,14 +127,10 @@
 			
 			$sortTaskArr = [] ;
 			
-			echo'<pre>';print_r($TasksArr  );echo'</pre>'.__FILE__.' '.__LINE__;
-			die(__FILE__ .' '. __LINE__ );
+			
 			
 			foreach( $TasksArr as $i=> $item )
 			{
-				
-				
-				
 				$query_params = $item['query_params'];
 				$is = false ;
 				foreach( $query_params as $queryParam )
@@ -154,21 +170,31 @@
 			$select = [
 				$db->quoteName( 't.*' ),
 			];
+			$option = $this->app->input->get('view' , 0 ) ;
 			
 			$query->select($select)
 				->from($db->quoteName('#__pro_critical_html_task','t'));
 			
-			$query->join('LEFT', '#__pro_critical_directory_views AS v ON v.value_view = component_view_id' );
+//			$query->join('LEFT', '#__pro_critical_directory_views AS v ON v.value_view = component_view_id' );
 			
 			$where = [
 				$db->quoteName('t.id_component') .' = '. $db->quote(self::$option_id ),
-				$db->quoteName('component_view_id') .' = '. $db->quoteName('value_view' ),
-				$db->quoteName('v.id') .' = '. $db->quote(self::$view_id ),
+				$db->quoteName('component_view_id') .' = '. $db->quote($option ),
+//				$db->quoteName('v.id') .' = '. $db->quote(self::$view_id ),
 			];
-			$query->where($where);
 			
+			$query->where(
+				'(' . implode(' AND ' , $where ) . ') '
+				.'OR ('.$db->quoteName('t.id_component') .'='.$db->quote('').')'
+				.'OR ('.$db->quoteName('t.id_component') .'='.$db->quote( self::$option_id  )
+					.'AND'
+					.$db->quoteName('component_view_id') .' = '. $db->quote('0' ).')'
+			);
+			
+//			echo 'Query Dump :'.__FILE__ .' Line:'.__LINE__  .$query->dump() ;
 			$db->setQuery($query);
 			$res = $db->loadAssocList();
+		
 			foreach( $res as $i => $resItems )
 			{
 				$query_params = json_decode( $resItems['query_params'] ) ;

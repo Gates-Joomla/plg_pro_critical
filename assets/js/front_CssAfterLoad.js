@@ -10,7 +10,6 @@
         console.log( elements )
         for (var i = 0, l = elements.links.length; i < l; i++) {
             addTag(elements.links[i]);
-
         }
         body= "style="+ JSON.stringify( elements.style )  ;
         getStyle(body);

@@ -224,12 +224,12 @@
 			
 //			echo'<pre>';print_r( $CriticalArr );echo'</pre>'.__FILE__.' '.__LINE__;
 //			die(__FILE__ .' '. __LINE__ );
-			
+			# Если критические стили созданы
 			if( $CriticalArr['critical_css_code'] )
 			{
-				# Установить индикатор о том что есть критичиские стили
+				# Установить индикатор о том что критические стили созданы
 				self::$UseCritical = true ;
-				# установить ссылку вниз Tag <head>
+				# установить критические стили вниз Tag <head>
 				$dom::writeBottomHeadTag( 'style' , $CriticalArr['critical_css_code']  );
 				
 			}#END IF
@@ -281,8 +281,15 @@
 					self::$StopForCritical = true;
 				}#END IF
 				
+				
 				# Подготовить ссылку к загрузи - определить параметры ссылки
 				\Plg\Pro_critical\Helpers\Assets\Css\Link::prepareLinkCssData( $Linkcopy );
+				
+				# Если критичиские стили созданы и
+				# в настройках файла установлино не загружать при созданных критичиских стилях
+				if( !$Linkcopy->load_if_criticalis_set && self::$UseCritical ) continue ; #END IF
+				
+//				echo'<pre>';print_r( $Linkcopy->delayed_loading );echo'</pre>'.__FILE__.' '.__LINE__;
 				
 				# Проверяем на отложеную загрузку
 				if( !$Linkcopy->delayed_loading )
@@ -295,6 +302,7 @@
 						# установить ссылку вниз Tag Head
 						$dom::writeBottomHeadTag( 'link' , null , $Linkcopy , $dom_params );
 					}else{
+						
 						self::$StackStyle['link'][] = $Linkcopy ;
 						
 						// $dom::writeDownTag ( 'link' , null , $Linkcopy  ) ;
@@ -302,6 +310,9 @@
 					
 				}#END IF
 			}#END FOREACH
+			
+//			die(__FILE__ .' '. __LINE__ );
+			
 		}#END FN
 		
 		/**
@@ -313,19 +324,40 @@
 			if( !self::$UseCritical ) return ; #END IF
 			$dom = new \GNZ11\Document\Dom();
 			$params = ComponentHelper::getParams( 'com_pro_critical' , $strict = false );
-			$css_loading_method = $params->get('css_loading_method' , 1 ) ;
-			# Если включен способ загрузки ссылки на CSS в низу страницы
-			if(  !$css_loading_method )
-			{
-				foreach( self::$StackStyle['link'] as $LinkCopy )
-				{
-					# Создать тэг перед </body>
-					$dom::writeDownTag ( 'link' , null , $LinkCopy  ) ;
-				}#END FOREACH
-				return ;
-			}#END IF
-			# Если включен способ загрузки ссылки на CSS Загружает JS
-			CssScript::addCssAfterLoadPage(self::$StackStyle);
+			$css_loading_method = $params->get('css_loading_method' , 2 ) ;
+			
+			
+			
+			switch( $css_loading_method ){
+				case 0:
+					foreach( self::$StackStyle['link'] as $LinkCopy )
+					{
+						# Создать тэг перед </body>
+						$dom::writeDownTag ( 'link' , null , $LinkCopy  ) ;
+					}#END FOREACH
+					break ;
+				case 1 :
+					# Если включен способ загрузки ссылки на CSS Загружает JS
+					CssScript::addCssAfterLoadPage(self::$StackStyle);
+					break ;
+				default:
+					# Способ прелоадер
+					# Создаст <link rel="preloader" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+					# Также добавит ссылку в тег <noscript>
+					foreach( self::$StackStyle['link'] as $LinkCopy )
+					{
+						$dom::writeDownNosciptTag( 'link' , null , $LinkCopy ) ;
+						$LinkCopy->onload = "this.onload=null;this.rel='stylesheet'" ;
+						\Plg\Pro_critical\Helpers\Assets\Links::setPreload($LinkCopy  ) ;
+					}
+					
+				
+			}
+			return ;
+			
+			
+			
+			
 			
 			
 //			echo'<pre>';print_r( self::$UseCritical );echo'</pre>'.__FILE__.' '.__LINE__;

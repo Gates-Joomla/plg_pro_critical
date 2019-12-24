@@ -60,6 +60,12 @@
 			# Получить информацию о компоненте
 			$Extension =   ComponentHelper::getComponent($option, $strict = false);
 			
+			
+		/*	echo'<pre>';print_r( $this->app->input );echo'</pre>'.__FILE__.' '.__LINE__;
+			echo'<pre>';print_r( $option );echo'</pre>'.__FILE__.' '.__LINE__;
+			echo'<pre>';print_r( $Extension );echo'</pre>'.__FILE__.' '.__LINE__;
+			die(__FILE__ .' '. __LINE__ );*/
+			
 			self::$option_id = Pro_criticalHelper::getVar( 'directory_components' , $Extension->id , 'extension_id' );
 			
 			if( self::$option_id ) return self::$option_id; #END IF

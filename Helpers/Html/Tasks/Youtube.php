@@ -16,6 +16,8 @@
 			$app = \JFactory::getApplication();
 			$body = $app->getBody();
 			
+			
+			
 			# Найти все Style элементы в теле страницы
 			$dom = new \GNZ11\Document\Dom();
 			$dom->loadHTML( $body );

@@ -87,16 +87,22 @@
 			$data = json_decode( $dataJson ) ;
 			
 			self::$Id = $data->id  ;
+			
 			# Url Page для которой создаются критичиские стили
 			self::$UrlPage = $data->url  ;
+			
 			# Получть объекты файлов из списка ID
 			$res = Assets::getAssetsById( $data->cssLinkHistory  , 'css_file' , 'id' );
+			
 			#Сортируем массив в порядке загрузки на странице
 			$css_fileArr = self::sortArr($data->cssLinkHistory , $res );
+			
 			# Получть объекты стилей из списка ID
 			$res = Assets::getAssetsById( $data->StyleHostory  , 'css_style' , 'id' );
+			
 			#Сортируем массив в порядке загрузки на странице
 			$css_styleArr = self::sortArr( $data->StyleHostory , $res );
+			
 			# Получить ссылки на файлы
 			$arrFiles = $this->getLinksFiles($css_fileArr) ;
 			
@@ -130,10 +136,11 @@
 		 * @since 3.9
 		 */
 		private function post(){
+			
 			$Arrdata = [
 				'task' => 'getCtiticalCss' ,
 				'cssUrl'  => self::$allCssUrl  ,
-				'urlSite' =>  self::$UrlPage . '?pro_critical=1'  ,
+				'urlSite' =>  self::$UrlPage . (strpos( self::$UrlPage, '?')?'&':'?' ).'pro_critical=1' ,
 				'userAgent' => self::$userAgent ,
 			];
 			$Arrdata['width'] = 1300 ;
@@ -179,6 +186,7 @@
 			$query = $db->getQuery( true ) ;
 			// Поля для обновления
 			$fields = array(
+				// $db->quoteName('cache_after_render') . ' = ' . $db->quote( null ) ,
 				$db->quoteName('critical_css_code') . ' = ' . $db->quote($criticalData->data[0]->criticalCss) ,
 				$db->quoteName('checked_out') . ' = ' . $db->quote(0) ,
 				$db->quoteName('photo_before') . ' = '  . $db->quote($criticalData->data[0]->screenshots->before) ,

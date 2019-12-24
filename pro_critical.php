@@ -1,43 +1,43 @@
 <?php
-/*----------------------------------------------------------------------------------|  www.vdm.io  |----/
-				Gstes Co. 
-/-------------------------------------------------------------------------------------------------------/
-
-	@version		1.0.0
-	@build			11th ноября, 2019
-	@created		11th ноября, 2019
-	@package		ForPlugins
-	@subpackage		pro_critical.php
-	@author			Nikolaychuk Oleg <http://nobd.ml>	
-	@copyright		Copyright (C) 2015. All Rights Reserved
-	@license		GNU/GPL Version 2 or later - http://www.gnu.org/licenses/gpl-2.0.html
-  ____  _____  _____  __  __  __      __       ___  _____  __  __  ____  _____  _  _  ____  _  _  ____ 
- (_  _)(  _  )(  _  )(  \/  )(  )    /__\     / __)(  _  )(  \/  )(  _ \(  _  )( \( )( ___)( \( )(_  _)
-.-_)(   )(_)(  )(_)(  )    (  )(__  /(__)\   ( (__  )(_)(  )    (  )___/ )(_)(  )  (  )__)  )  (   )(  
-\____) (_____)(_____)(_/\/\_)(____)(__)(__)   \___)(_____)(_/\/\_)(__)  (_____)(_)\_)(____)(_)\_) (__) 
-
-/------------------------------------------------------------------------------------------------------*/
-
-// No direct access to this file
-defined('_JEXEC') or die('Restricted access');
-
-
-use Joomla\CMS\Application\CMSApplication;
-use Joomla\CMS\Plugin\CMSPlugin;
-
-/**
- * System - Pro_critical plugin.
- *
- * @package   Pro_critical
- * @since     1.0.4
- */
-class PlgSystemPro_critical extends CMSPlugin
-{
+	/*----------------------------------------------------------------------------------|  www.vdm.io  |----/
+					Gstes Co.
+	/-------------------------------------------------------------------------------------------------------/
+	
+		@version		1.0.0
+		@build			11th ноября, 2019
+		@created		11th ноября, 2019
+		@package		ForPlugins
+		@subpackage		pro_critical.php
+		@author			Nikolaychuk Oleg <http://nobd.ml>
+		@copyright		Copyright (C) 2015. All Rights Reserved
+		@license		GNU/GPL Version 2 or later - http://www.gnu.org/licenses/gpl-2.0.html
+	  ____  _____  _____  __  __  __      __       ___  _____  __  __  ____  _____  _  _  ____  _  _  ____
+	 (_  _)(  _  )(  _  )(  \/  )(  )    /__\     / __)(  _  )(  \/  )(  _ \(  _  )( \( )( ___)( \( )(_  _)
+	.-_)(   )(_)(  )(_)(  )    (  )(__  /(__)\   ( (__  )(_)(  )    (  )___/ )(_)(  )  (  )__)  )  (   )(
+	\____) (_____)(_____)(_/\/\_)(____)(__)(__)   \___)(_____)(_/\/\_)(__)  (_____)(_)\_)(____)(_)\_) (__)
+	
+	/------------------------------------------------------------------------------------------------------*/
+	
+	// No direct access to this file
+	defined( '_JEXEC' ) or die( 'Restricted access' );
+	
+	
+	use Joomla\CMS\Application\CMSApplication;
+	use Joomla\CMS\Plugin\CMSPlugin;
+	
+	/**
+	 * System - Pro_critical plugin.
+	 *
+	 * @since     1.0.4
+	 * @package   Pro_critical
+	 */
+	class PlgSystemPro_critical extends CMSPlugin
+	{
 		/**
 		 * @since 3.7
 		 * @var CMSApplication
 		 */
-		private $app ;
+		private $app;
 		/**
 		 * Экземпляр основного хелпера
 		 * @since 3.7
@@ -49,7 +49,7 @@ class PlgSystemPro_critical extends CMSPlugin
 		 * @since version
 		 * @var bool
 		 */
-		private $SLEEP = false ;
+		private $SLEEP = false;
 		
 		/**
 		 * Constructor.
@@ -69,7 +69,8 @@ class PlgSystemPro_critical extends CMSPlugin
 			JLoader::registerNamespace( 'Plg\Pro_critical' , JPATH_PLUGINS . '/system/pro_critical/Helpers' , $reset = false , $prepend = false , $type = 'psr4' );
 			JLoader::registerNamespace( 'GNZ11' , JPATH_LIBRARIES . '/GNZ11' , $reset = false , $prepend = false , $type = 'psr4' );
 			
-			
+			$profiler = \JProfiler::getInstance( 'PRO_Application' );
+			$profiler->mark( 'Start - pro_critical.php' );
 			
 			try
 			{
@@ -78,22 +79,28 @@ class PlgSystemPro_critical extends CMSPlugin
 			catch( Exception $e )
 			{
 				$this->SLEEP = true;
-				
 			}
-
+			
 		}
 		
 		/**
 		 * Initialise the application.
 		 * Trigger the onAfterInitialise event.
-		 * @return  void
+		 * @return bool
 		 * @throws Exception
 		 * @since   3.2
 		 */
 		public function onAfterInitialise ()
 		{
+			if( $this->SLEEP ) return false; #END IF
+			# Если Админ Панель
+			if( $this->app->isClient( 'administrator' ) ) return true; #END IF
 			
-		
+			
+			$this->Helper->AfterInitialise();
+			
+			return true;
+			
 		}
 		
 		/**
@@ -104,7 +111,13 @@ class PlgSystemPro_critical extends CMSPlugin
 		 */
 		public function onAfterRoute ()
 		{
-			if( $this->SLEEP ) return false ; #END IF
+			if( $this->SLEEP ) return false; #END IF
+			# Если Админ Панель
+			if( $this->app->isClient( 'administrator' ) ) return true; #END IF
+			
+			$profiler = \JProfiler::getInstance( 'PRO_Application' );
+			$profiler->mark( 'Start - onAfterRoute' );
+			
 			return true;
 		}
 		
@@ -119,8 +132,18 @@ class PlgSystemPro_critical extends CMSPlugin
 		 */
 		public function onBeforeCompileHead ()
 		{
-			if( $this->SLEEP ) return false ; #END IF
+			if( $this->SLEEP ) return false; #END IF
+			$this->Helper->add_GNZ11_js() ;
+			
+			
+			# Если Админ Панель
+			if( $this->app->isClient( 'administrator' ) ) return true; #END IF
+			
+			$profiler = \JProfiler::getInstance( 'PRO_Application' );
+			$profiler->mark( 'Start - onBeforeCompileHead' );
+			
 			$this->Helper->BeforeCompileHead();
+			
 			return true;
 		}
 		
@@ -132,8 +155,11 @@ class PlgSystemPro_critical extends CMSPlugin
 		 *
 		 * @since 3.2
 		 */
-		public function onBeforeRender(){
-		
+		public function onBeforeRender ()
+		{
+			$profiler = \JProfiler::getInstance( 'PRO_Application' );
+			$profiler->mark( 'Start - onBeforeRender' );
+			
 		}
 		
 		/**
@@ -146,7 +172,7 @@ class PlgSystemPro_critical extends CMSPlugin
 		public function onAfterRender ()
 		{
 			
-			if( $this->SLEEP ) return false ; #END IF
+			if( $this->SLEEP ) return false; #END IF
 			# Если Админ Панель
 			if( $this->app->isClient( 'administrator' ) ) return true; #END IF
 			
@@ -159,7 +185,6 @@ class PlgSystemPro_critical extends CMSPlugin
 		}
 		
 		
-		
 		/**
 		 * Trigger the onAfterCompress event.
 		 * Если в конфигурации включено сжатие gzip и сервер совместим.
@@ -168,8 +193,17 @@ class PlgSystemPro_critical extends CMSPlugin
 		 */
 		public function onAfterCompress ()
 		{
+			if( $this->SLEEP ) return false; #END IF
+			# Если Админ Панель
+			if( $this->app->isClient( 'administrator' ) ) return true; #END IF
 			
-			if( $this->SLEEP ) return false ; #END IF
+			$profiler = \JProfiler::getInstance( 'PRO_Application' );
+			$profiler->mark( 'pro onAfterCompress End' );
+			$pageCreationTime = $profiler->getBuffer();
+			
+			//			echo'<pre>';print_r( $pageCreationTime );echo'</pre>'.__FILE__.' '.__LINE__;
+			//			die(__FILE__ .' '. __LINE__ );
+			
 			
 			return true;
 		}
@@ -179,14 +213,19 @@ class PlgSystemPro_critical extends CMSPlugin
 		 * onAfterRespond.
 		 * После ответа приложения клиенту перед закрытием приложения
 		 * @return bool
+		 * @throws Exception
 		 * @since   1.7.3
 		 *
 		 */
 		public function onAfterRespond ()
 		{
+			if( $this->SLEEP ) return false; #END IF
+			if( $this->app->isClient( 'administrator' ) ) return true; #END IF
 			
-			if( $this->SLEEP ) return false ; #END IF
-			die(__FILE__ .' '. __LINE__ );
+			
+			$this->Helper->AfterRespond();
+			
+			
 			return true;
 		}
 		
@@ -201,4 +240,4 @@ class PlgSystemPro_critical extends CMSPlugin
 			$this->Helper->onAjax();
 			
 		}
-}
+	}

@@ -96,13 +96,7 @@
 			echo'<pre>';print_r( $CriticalCssID );echo'</pre>'.__FILE__.' '.__LINE__;
 			
 //			self::$CriticalCss = $this->addNewCriticalCss();*/
-			
-			
-		
 		}
-		
-		
-		
 		
 		/**
 		 * Создать Новый CriticalCss
@@ -111,15 +105,28 @@
 		 */
 		private function getItems ()
 		{
-			$Component = Component::instance();
+			try
+			{
+				#Взять из строки запроса только те параметры
+				# которые должны учитоывться при создании критических стилей
+				$query_string = self::buildQueryParamsString();
+			}
+			catch( \Exception $e )
+			{
+				echo'<pre>';print_r(  $e );echo'</pre>'.__FILE__.' '.__LINE__;
+				die(__FILE__ .' '. __LINE__ );
+			}
+			
 			$db        = \JFactory::getDbo();
 			
 			$where   = [];
-			$where[] = $db->quoteName( 'option' ) . '=' . $Component->getOptionId();
-			$where[] = $db->quoteName( 'view' ) . '=' . $Component->getViewId();
+			$where[] = $db->quoteName( 'query_string' ) . '=' . $db->quote($query_string) ;
+			
 			
 			$query = $db->getQuery( true );
-			$query->select( '*' )->from( $db->quoteName( '#__pro_critical_css' ) )->where( $where );
+			$query->select( '*' )
+				->from( $db->quoteName( '#__pro_critical_css' ) )
+				->where( $where );
 //			echo $query->dump();
 			$db->setQuery( $query );
 			$res = false ;
@@ -137,9 +144,7 @@
 			{
 				// Executed only in PHP 7, will not match in PHP 5
 				echo 'Выброшено исключение: ' , $e->getMessage() , "\n";
-				echo '<pre>';
-				print_r( $e );
-				echo '</pre>' . __FILE__ . ' ' . __LINE__;
+				echo '<pre>'; print_r( $e ); echo '</pre>' . __FILE__ . ' ' . __LINE__;
 				die( __FILE__ . ' ' . __LINE__ );
 			}
 			
@@ -183,8 +188,11 @@
 		 * @since 3.9
 		 */
 		private function addNewCriticalCss(){
-			$PNT = $this->app->input->get('pro_critical' , false , INT ) ;
+			
+			# Закрыть вход парсера [CCSS]
+			$PNT = $this->app->input->get('pro_critical' , false , 'INT' ) ;
 			if( $PNT ) return #END IF
+			
 			
 			$Component = Component::instance();
 			$Option = ComponentsOption::instance();
@@ -192,13 +200,36 @@
 			$data['option'] = $Option->getOptionId();
 			$data['view']   = $View->getViewId();
 			$data['pro_critical_url_id']   = Url::instance()->getId() ;
+			$data['query_string']   = self::buildQueryParamsString() ;
+			
 			
 			# TODO - привязать к администратору
-			$data['checked_out']   = 2727 ;
+			$data['checked_out'] = 2727 ;
 			$data['checked_out_time']   = new \JDate('now +'.self::$LockTimeLeft.' seconds');
+			
 			
 			# Подлючене модели
 			$model = \Pro_criticalHelper::getModel( 'css' , JPATH_ADMINISTRATOR . '/components/com_pro_critical/') ;
+			
+					try
+							{
+								// Code that may throw an Exception or Error.
+								$model->save($data) ;
+							}
+							catch (\Exception $e)
+							{
+							   // Executed only in PHP 5, will not be reached in PHP 7
+							   echo 'Выброшено исключение: ',  $e->getMessage(), "\n";
+							   die(__FILE__ .' '. __LINE__ );
+							}
+							catch (\Throwable $e)
+							{
+								// Executed only in PHP 7, will not match in PHP 5
+								echo 'Выброшено исключение: ',  $e->getMessage(), "\n";
+								echo'<pre>';print_r( $e );echo'</pre>'.__FILE__.' '.__LINE__;
+								die(__FILE__ .' '. __LINE__ );
+							}
+			
 			
 			if( $model->save($data) )
 			{
@@ -213,17 +244,50 @@
 		}
 		
 		/**
-		 * Проверить если нужно обновление отправить скриты
+		 * Проверить если нужно обновление отправить скрипты на фронт
 		 * @throws \Exception
 		 * @since 3.9
 		 */
 		public static function ifUpdate(){
+			
+			
 			if( self::$Update )
 			{
+				
 				CriticalCssScript::add( self::$CriticalCssData );
 			}#END IF
 		
 		}
+		
+		/**
+		 * Взять из строки запроса только те параметры которые должны учитоваться при создании критических стилей
+		 * @return string - Строка параметров Url eg.( option=com_virtuemart&view=category )
+		 * @throws \Exception
+		 * @since 3.9
+		 */
+		public static function buildQueryParamsString ()
+		{
+			$app         = \JFactory::getApplication();
+			$uObj        = \JUri::getInstance();
+			$router      = $app->getRouter();
+			$Router_Data = $router->parse( $uObj );
+			$uObj::reset();
+			
+			$comparams = \JComponentHelper::getParams( 'com_pro_critical' )->toArray();
+			$queryArr  = [];
+			foreach( $comparams[ 'excluded_request_global' ] as $comparam )
+			{
+				$query = $comparam[ 'query' ];
+				if( key_exists( $query , $Router_Data ) )
+				{
+					$queryArr[ $query ] = $Router_Data[ $query ];
+				}#END IF
+			}#END FOREACH
+			return (string) $uObj::buildQuery( $queryArr );
+		}
+		
+		
+		
 		
 		public function onAjaxApiCritical(){
 			die(__FILE__ .' '. __LINE__ );

@@ -35,9 +35,10 @@
 			{
 				self::$instance = new self( $options );
 			}
-			
 			return self::$instance;
 		}#END FN
+		
+		
 		
 		/**
 		 * @return mixed
@@ -46,44 +47,48 @@
 		 */
 		public function getId(){
 			if( self::$UrlId ) return self::$UrlId ; #END IF
-			if( self::$UrlId = self::get() ) return self::$UrlId = self::get() ; #END IF ;
-			self::$UrlId = self::setUrl() ;
-			return self::$UrlId ;
+			return self::$UrlId = self::get() ; #END IF ;
 		}
 		
 		/**
 		 * Получить Url Id из справочника компонента Pro_critical
 		 * @return mixed
+		 * @throws \Exception
 		 * @since 3.9
 		 */
 		private function get(){
-			$uri = \JUri::getInstance( );
-			$current = $uri->current();
-			return \Pro_criticalHelper::getVar( 'url' , $current , 'url_page' );
+			$current = \JUri::getInstance( )->toString();
+			$id = \Pro_criticalHelper::getVar( 'url' , $current , 'url_page' );
+			if( $id ) return  $id ; #END IF
+			#Добавим новый Url
+			return self::$UrlId = self::setUrl( $current ) ;
 		}
 		
 		/**
 		 * Добавить текущий URL в справочник URL
-		 * @param   string  $Url
 		 *
-		 * @return int id Url
+		 * @param $current
+		 *
+		 * @return \mix
 		 * @throws \Exception
 		 * @since 3.9
 		 */
-		private static function setUrl ()
+		private static function setUrl ($current)
 		{
-			$uri = \JUri::getInstance( );
-			$data['url_page'] =   $uri->current();
+			$data['url_page'] =   $current ;
 			# Подлючене модели
 			$model = \Pro_criticalHelper::getModel( 'url' , JPATH_ADMINISTRATOR . '/components/com_pro_critical/') ;
 			if( $model->save($data) )
 			{
-				return  $model->get('state')->{'css.id'} ;
-				
+				$id = \Pro_criticalHelper::getVar( 'url' , $current , 'url_page' );
 			}else{
 				throw new \Exception('Error! при создании значения в справочнике Url.');
 			}#END IF
+			/* var int */
+			return  $id ;
+			
 		}
+		
 		
 		
 	}

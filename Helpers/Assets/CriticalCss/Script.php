@@ -10,7 +10,11 @@
 	
 	class Script
 	{
-		static $Link = '/plugins/system/pro_critical/assets/js/front_CriticalCss.js';
+		/**
+		 * @var string - Ссылка на файл Js обработчика
+		 * @since 3.9
+		 */
+		static $LinkJsFileHandler = '/plugins/system/pro_critical/assets/js/front_CriticalCss.js';
 		
 		/**
 		 * Добавить JS обработчик для создания критичиских стилей
@@ -21,18 +25,31 @@
 			
 			if( Css::$StopForCritical || Style::$StopForCritical  ) return ; #END IF
 			
+			$dom = new \GNZ11\Document\Dom();
+			
 			$date = new \DateTime();
 			$now = $date->getTimestamp()   ;
-			$uri = \JUri::getInstance( );
 			
-			$dom = new \GNZ11\Document\Dom();
-			$Link = self::$Link . '?i=' . $now  ;
+			$uri = \Joomla\CMS\Uri\Uri::getInstance();
+			$link = $uri->toString(array('path', 'query', 'fragment'));
+			$rLink = \Joomla\CMS\Router\Route::_('index.php'.$link , $xhtml = true, $tls = 0 , $absolute = true) ;
+			
+			
+			/*echo'<pre>';print_r( $rLink );echo'</pre>'.__FILE__.' '.__LINE__;
+			echo'<pre>';print_r( $link );echo'</pre>'.__FILE__.' '.__LINE__;
+			
+			echo'<pre>';print_r( $uri );echo'</pre>'.__FILE__.' '.__LINE__;
+			die(__FILE__ .' '. __LINE__ );*/
+			
+			
+			
+			$Link = self::$LinkJsFileHandler . '?i=' . $now  ;
 			# Добавить тег ссылка Js в тело документа перед закрывающемся тегом </body>
 			$dom::writeDownTag( 'script' , null , ['src' => $Link , 'async'=> 1   ] );
 			
 			$scriptData = [] ;
 			$scriptData['id'] = CriticalCss::$CurrentCriticalId; // $CriticalCss['id'] ;
-			$scriptData['url'] = $uri->current();
+			$scriptData['url'] = $rLink ;
 			$scriptData['cssLinkHistory'] =   Css::$LinkHistory ;
 			$scriptData['StyleHostory'] =   Style::$StyleHostory ;
 			

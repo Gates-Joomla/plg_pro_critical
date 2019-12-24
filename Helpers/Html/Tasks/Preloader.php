@@ -4,9 +4,9 @@
 	use Plg\Pro_critical\Html\Libraries\LazyLoad;
 	use Plg\Pro_critical\Helpers\Assets\Links;
 	
-	class Images
+	class Preloader
 	{
-		private static $DOT = 'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+		
 		/**
 		 * @param $task
 		 *
@@ -15,6 +15,23 @@
 		 */
 		public static function aplly ( $task )
 		{
+			
+			
+			$preload = new \stdClass();
+			$preload->src = $task['link'] ;
+			
+			switch($task['link_type']){
+				case 1 : $type = 'prefetch' ; break ;
+				case 2 : $type = 'preconnect' ; break ;
+				case 3 : $type = 'dns-prefetch' ; break ;
+				case 4 : $type = 'prerender' ; break ;
+				default : $type = 'preload' ;
+			}
+			
+			\Plg\Pro_critical\Helpers\Assets\Links::setPreload( $preload , null ,  $type  );
+			
+			 return ;
+			
 			$app = \JFactory::getApplication();
 			$body = $app->getBody();
 			

@@ -12,6 +12,7 @@
 	use Throwable;
 	
 	
+	
 	class Js extends Links
 	{
 		private $app;

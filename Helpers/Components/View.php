@@ -65,6 +65,7 @@
 			$uri = \JUri::getInstance( );
 			$router            = $this->app->getRouter();
 			$Router_Data = $router->parse( $uri );
+			$uri::reset();
 			
 			unset($Router_Data['pro_critical']) ;
 			

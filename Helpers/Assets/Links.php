@@ -7,6 +7,8 @@
 	use Joomla\CMS\Factory;
 	use Exception;
 	
+	
+	
 	/**
 	 * Class Links - ОБЩИЙ Обработчик ссылок
 	 * @since 3.9
@@ -26,7 +28,7 @@
 		 * @throws Exception
 		 * @since 3.9
 		 */
-		private function __construct ( $options = [] )
+		public function __construct ( $options = [] )
 		{
 			return $this;
 		}
@@ -61,7 +63,15 @@
 			foreach( self::$Preload as $href => $attr )
 			{
 				$attr[ 'href' ] = $href;
-				$dom::writeTopHeadTag( 'link' , '' , $attr );
+				
+				# Ставим в начало <head>
+//				$dom::writeTopHeadTag( 'link' , '' , $attr );
+				
+				# Ставим теги перед </head>
+				$dom::writeBottomHeadTag( 'link' , '' , $attr );
+				
+				
+				
 			}#END FOREACH
 			return true;
 		}
@@ -146,12 +156,16 @@
 					$href = $Link->minify_file ; #END IF
 			}#END IF
 			
+			
 			# TODO - Доделать delayed loading
 			# Пропустить если отложенная загрузка
 			if ( isset($Link->delayed_loading)  && $Link->delayed_loading) {
 			
 			} #END IF
+			
+			
 			$MediaVersion = self::getMediaVersion()  ;
+			
 			# id Revision
 			if( isset( $Link->ver_type ) && $Link->ver_type && !empty( $Link->revision_id ) )
 			{
@@ -189,6 +203,8 @@
 				default :
 					$Link->href	= $href ;
 			}
+			
+			
 			
 			# Если с прелоадером
 			if ($Link->preload) self::setPreload($Link , $type);
@@ -229,8 +245,10 @@
 		 *
 		 * @copyright 05.01.19
 		 */
-		public static function setPreload ( $preload , $typeLink, $typeDefault = 'preload'  )
+		public static function setPreload ( $preload , $typeLink = null , $typeDefault = 'preload'  )
 		{
+			
+			
 			if (isset($preload->src)) {
 				$url   = $preload->src ;
 			}elseif (isset($preload->url )){
@@ -244,40 +262,63 @@
 			#Проверка на кроссдоменн
 			$preconnect['crossorigin'] =    self::checkCrossorigin( $url   )   ;
 			$pUrl = parse_url($url) ;
-			if (isset($pUrl['path'])){
-				$info = new \SplFileInfo( $pUrl['path']  );
-			}else{
-				$info = new \SplFileInfo( $url  );
+			if( isset( $pUrl[ 'path' ] ) ){
+				$pathUrl = $pUrl[ 'path' ];
+			}else
+			{
+				$pathUrl  = $url  ;
 			}
-			// Получаем расшерение
+			$preconnect['as'] = self::getFileType( $pathUrl  );
+			
+			if( isset( $preload->onload  ))
+			{
+				$preconnect['onload'] = $preload->onload ;
+			}#END IF
+			
+			
+			self::$Preload[$url] =    $preconnect  ;
+		}#END FN
+		
+		/**
+		 * Получить тип файла
+		 * @param   string  $pathUrl - путь к файлу
+		 * @param          $url
+		 * @param          $preconnect
+		 *
+		 * @return mixed
+		 * @since 3.9 
+		 */
+		protected static function getFileType ( $pathUrl   )
+		{
+			$info = new \SplFileInfo( $pathUrl );
+			//PHP Получаем расшерение файла
 			$Ext = $info->getExtension();
 			
-			switch ($Ext){
+			switch( $Ext )
+			{
 				case 'js':
-					$preconnect['as'] = 'script' ;
-					break ;
+					$FileType = 'script';
+					break;
 				case 'css':
-					$preconnect['as'] = 'style' ;
-					break ;
+					$FileType = 'style';
+					break;
 				case 'gif':
 				case 'png':
 				case 'jpg':
 				case 'jpeg':
 				case 'webp':
 				case 'svg':
-					
-					$preconnect['as'] = 'image' ;
-					break ;
+					$FileType = 'image';
+					break;
 				case 'ttf':
 				case 'woff':
 				case 'woff2':
-					$preconnect['as'] = 'font' ;
-					break ;
-			}#END SWITCH
+					$FileType = 'font';
+					break;
+			}
 			
-			
-			self::$Preload[$url] =    $preconnect  ;
-		}#END FN
+			return $FileType;#END SWITCH
+		}
 		
 		/**
 		 * Проверка хоста ссылки локалный или внешний
@@ -398,8 +439,6 @@
 				}#END IF
 			}#END IF
 			
-			
-			
 			# Проверка path
 			if( stristr( $protocol[ 'path' ] , '//' ) )
 			{
@@ -414,19 +453,31 @@
 				# если host - не содержит точку
 				if( !stristr( $protocol[ 'host' ] , '.' ) && $isLocalHost && preg_match( '/^\/\//' , $href ) )
 				{
-					$log[ 'err' ][] = 'Ошибка в адресе локального файла. Два слеша в начале относительного пути';
-					$log[ 'err_code' ][] = 1008 ;
-					$href           = '/' . $protocol[ 'host' ] . $protocol[ 'path' ];
+					$log[ 'err' ][]      = 'Ошибка в адресе локального файла. Два слеша в начале относительного пути';
+					$log[ 'err_code' ][] = 1008;
+					$href                = '/' . $protocol[ 'host' ] . $protocol[ 'path' ];
+				}
+				else if( $isLocalHost )
+				{
+					$pos = stripos($protocol['path'], '/' );
+					if( $pos > 0 )
+					{
+						$log[ 'err' ][]      = 'В начале пути локального файла отсутствует ведущий слэш';
+						$log[ 'err_code' ][] = 1009;
+						$href = '/'.$protocol['path'];
+					}#END IF
 				}#END IF
-			}
+			}#END IF
 			
+			#PHP Получаем расшерение файла
+			$info = new \SplFileInfo( $protocol['path']  );
+			$Ext = $info->getExtension();
 			
-			
+			$log [ 'file_ext' ] = $Ext ;
+			$log [ 'file_type' ] = self::getFileType ( $protocol['path']);
 			$log [ 'file' ]     = $href;
 			$log [ 'no_external' ] = $isLocalHost;
 			$log [ 'protocol' ] = $protocol;
-			
-			
 			
 			if( count( $log[ 'err' ] ) )
 			{

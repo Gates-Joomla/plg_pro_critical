@@ -123,7 +123,7 @@
 			}#END IF
 			
 			
-			$excludeFields=['err','err_code','protocol','absolute_path','created','created_by','published' ];
+			$excludeFields=['file_type','file_ext','err','err_code','protocol','absolute_path','created','created_by','published' ];
 			
 			if( !count( $link ) ) return true;
 			
