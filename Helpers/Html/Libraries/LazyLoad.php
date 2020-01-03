@@ -6,7 +6,8 @@
 	{
 		private $app;
 		public static $instance;
-		public static $Link = 'https://cdn.jsdelivr.net/npm/vanilla-lazyload@12.4.0/dist/lazyload.min.js';
+		// public static $Link = 'https://cdn.jsdelivr.net/npm/vanilla-lazyload@12.4.0/dist/lazyload.min.js';
+		public static $Link = '/libraries/GNZ11/assets/js/modules/gnz11.Lazyload.js';
 		
 		/**
 		 * helper constructor.

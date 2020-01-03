@@ -103,9 +103,20 @@
 						{
 						}
 						break;
+					case 4 :
+						try
+						{
+							\Plg\Pro_critical\Html\Tasks\To_template::aplly( $item );
+						}
+						catch( \Exception $e )
+						{
+						}
+						break;
 					case 0 :
 						$aaa = null;
 						break;
+					default:
+					
 				}
 			}#END FOREACH
 			return true;

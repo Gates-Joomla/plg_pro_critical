@@ -30,8 +30,8 @@
 			
 			\Plg\Pro_critical\Helpers\Assets\Links::setPreload( $preload , null ,  $type  );
 			
-			 return ;
-			
+			return ;
+			/*
 			$app = \JFactory::getApplication();
 			$body = $app->getBody();
 			
@@ -73,7 +73,7 @@
 			$body = $dom->saveHTML();
 			$app->setBody( $body );
 			
-			$LazyLoad = LazyLoad::instance();
+			$LazyLoad = LazyLoad::instance();*/
 			
 			
 			/*echo '<pre>';

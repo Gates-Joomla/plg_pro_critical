@@ -21,6 +21,10 @@
 	// No direct access to this file
 	defined( '_JEXEC' ) or die( 'Restricted access' );
 	
+	#TODO-root. Сохранять JS Polifils в БД .
+	#TODO-root. Создать разделение по устройствам мобильные | дескотпы .
+	#TODO-root. Создать объединение файлов библиотек которые грузятся на всех страницах.
+	
 	
 	use Joomla\CMS\Application\CMSApplication;
 	use Joomla\CMS\Plugin\CMSPlugin;
@@ -63,6 +67,8 @@
 		public function __construct ( &$subject , $config )
 		{
 			
+			
+			
 			parent::__construct( $subject , $config );
 			$this->app = JFactory::getApplication();
 			
@@ -98,7 +104,6 @@
 			
 			
 			$this->Helper->AfterInitialise();
-			
 			return true;
 			
 		}
