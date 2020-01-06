@@ -300,14 +300,8 @@
 			}#END IF
 			
 			$inputTask = $this->app->input->get('task' , false , 'STRING' );
-			
 			$model = '\Plg\Pro_critical'.$dataModel ;
-			
-			
 			$obj = new $model();
-			
-			
-			
 			$res = $obj->{$inputTask}();
 			
 			if(  !$res )
